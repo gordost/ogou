@@ -1,4 +1,4 @@
-# Kraš-kurs iz Go-a jednog popizdelog Javašlučara
+# Kraš-kurs iz Go-a jednog kivnog Javašlučara
 
 Evo već mesečak dana pišem isključivo u Go-u, pa reko' da promuhabetim nešto na tu temu. Zato odmah na startu da se izlajem: ako me išta bude nateralo da se vratim Javi, smatraću to korakom unazad. Program napisan u Go-u podseća na žilavog dugoprugaša koji zna i da poleti u sprint kad treba, a u Javi na ćelavog debeljka koji se u početku jedva vuče, premda kasnije hrabro gura kada se zalaufa. Stvar je u tome što su Javini frejmvorkovi, iako strogo nisu deo Jave, nekako postali nezaobilazni deo jezika. Kontrasta radi, minimalizam Go-a je razlog što je Go eksplodirao u Docker-kontejnerima i Lambda-servisima na AWS-u... brzo se startuje, i odmah navali da radi svoj pos'o.
 
@@ -1219,14 +1219,64 @@ func (mem *tokenStore) Fetch(token string) (interface{}, error) {
 	return envelope.payload, nil
 }
 ```
-Ovim smo samo dali tokenima novu funkcionalnost (rok trajanja), ali ovim se priča ne završava. Izjanđale tokene valja čistiti, ali kako?
+Ovim smo samo dali tokenima novu funkcionalnost (rok trajanja), ali ovim se priča ne završava. Izjanđale tokene valja čistiti, jer bi nam u suprotnom naša mapa samo rasla, ali kako?
 
 ---
+
+U Go-u, ako joj znamo ključ, stavku iz mape moguće je brisati na sledeći način:
+```go
+    delete(m, key)
+```
+E sad, kako znamo koji ključ da brišemo? Kao prvo, mape su skroz nepogodne da po njima jurimo izjanđale tokene. Stvar je u tome što je u mapi redosled tokena za nas slučajan, tako da, da bi našli jedan jedini matori token, rizikujemo da zbog toga moramo da prođemo celu mapu. 
+
+U Go-u, prolaz kroz mapu je moguće izvršiti ovako:
+```go
+    for k, v := range m {
+        ...
+    }
+```
+U našem slučaju, ako bi prolazili kroz mapu na ovaj način, nju bi valjalo zaključati muteksom dok gomila niti (*thread*-ova) moguće čeka na upis u nju i/ili čitanje iz nje. Ovo, naravno, savestan programer ne može sebi dozvoliti.
+
+Moramo naći način da nam pristup izjanđalim tokenima bude brže. U tu svrhu, prvo ćemo definisati ono što moramo. Definisaćemo strukturicu u kojoj držimo informaciju o jednom tokenu, kao i informaciju o izjanđalosti tog tokena. Za to je dovoljno da na jednom mestu grupišemo token i kovertu koju smo pod tim tokenom sačuvali u mapi nekako ovako:
+
+```go
+type entry struct {
+	token    string
+	envelope *envelope
+}
+```
+
+Kad god nam je u ruci instancu ove strukture, izjanđalost možemo proveriti metodom `expired()` koju implementira `*envelope`. Budući da u tom slučaju znamo i token, odmah znamo šta da brišemo iz mape. *So far so good*.
+
+E sad, jedno je imati ovu strukturicu, ali pronalaziti tokene spremne za progon nešto sasvim drugo. Mi želimo da nam se brisanje starih tokena dešava što brže, uz što manje blokiranja drugih niti (*thread*-ova) na nekom muteksu. Zbog toga nam se čini super ako ceo taj posao završi sama metoda `Store()`. Ona ionako, kako god se dovijali, **mora** da zaključa muteks. Zašto onda ne iskoristiti to vreme da o istom trošku ona pronađe tačno jedan izjanđao token i, ako ga pronađe, sedne na njegovo mesto? Ovo mora da se odvija što je brže moguće tako da nijedan poziv metode `Store()` ne traje značajno duže od bilo kog drugog poziva. Imajmo u vidu da klijenti imaju slobodu da prozivaju naš interfejs pod kontrolom nekakvog tajmera, tako da bi bilo dobro da se pozivi odvijaju glatko, bez značajnih razlika u dužini izvršavanja.
+
+Ako bi u početku recimo imali prazan slajs neke početne dužine, a čiji bi članovi u početku svi bili `nil`, mogli bi taj slajs da obilazimo kao nekakav kružni bafer, jureći po njemu izjanđale tokene:
+
+```go
+    buffer := make([]*entry, initalSize)
+    curr := 0
+```
+
+Algoritam bi išao nekako ovako:
+
+1. Metoda `Store()`, budući da je mesto `buffer[curr]` u početku prazno ( `buffer[0] == nil`), jednostavno upiše `payload` u mapu, a na mestu `buffer[0]` sačuva strukturicu `entry` koja opisuje šta je u mapi sačuvano. Nakon toga, metoda `Store()` uveća `curr` za 1
+2. Metoda `Store()` nastavlja postupak iz 1. sve dok ne dođe do kraja bafera. A kada dođe, ona prosto vrati `curr` na 0 i čeka sledeći put.
+3. Budući da je `curr` sada opet 0, mesto `buffer[0]` sledećeg puta sigurno neće biti prazno. Međutim, na tom mestu će se nalaziti najstariji token, što znači da baš taj token ima najveću šansu da bude izjanđao. 
+4. Ako jeste izjanđao, onda ga `Store()` jednostavno izbriše iz mape, a mesto `buffer[0]` prejaše novim. Nakon toga, `Store` opet poveća `curr` za 1.
+5. Metoda `Store()` nastavlja postupak iz 4. sve dok nailazi na izjanđale tokene.
+6. U zavisnosti od početne veličine bafera, metoda `Store()` će u jednom momentu naleteti na važeći token. Šta onda?
+7. Kada se to desi, to će samo biti znak da nam je bafer pun važećih tokena, i da ga treba proširiti. U tu svrhu, alociraćemo dvostruko duži novi bafer, kopirati elemente iz starog u novi, te nakon postavljanja promenljive `curr` na prvo prazno mesto u novom baferu, nastaviti postupak 1.
+
+Ovo sve zvuči do jaja, ali ovde ipak ima nešto što nije. Već smo videli da je u Go-u, kao uostalom i u drugim programskim jezicima sveta, nemoguće alocirati novi bafer bez tumbanja/kopiranja memorije. A kada se to desi, metoda `Store()` će vidno da štucne, i, zavisno od količine tokena, odavaće utisak da se kod nje nešto vidno desilo. 
+
+E sad: kako izgladiti ovu džombu?
+
+##### Dvostruko povezane liste
 
 
 ###  Kuda dalje?
 
-Ovim smo završili ono što smo ovde za sada nameravali implementirati, ali šta dalje? Drugim rečima, šta nam to još fali, a moglo bi zatrebati? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira. Svaki *Pull Request* ću rado pregledati, i, ako je OK, prihvatiti u ovaj repo.
+Ovim smo završili ono što smo ovde za sada nameravali implementirati, ali šta dalje? Drugim rečima, šta nam to još fali, a moglo bi zatrebati? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira. Svaki *Pull Request* ću rado pregledati, i, ako je OK, prihvatiti u ovom repu.
 
 ##### Različiti TTL-ovi
 
@@ -1262,6 +1312,20 @@ Ovde treba voditi računa o tipu podataka, jer payload-ove sa različitih mašin
 ##### Perzistentni TokenStore
 
 Mašine se ponekad moraju restartovati/rekreirati, tako da bi isto tako bilo zgodno da TokenStore ima načina da u nekom intervalu serijalizuje svoj sadržaj u neku perzistentnu memoriju (recimo disk, mada i ovo treba biti konfigurabilno), tako da nove mašine mogu da se inicijalizuju recimo odatle.
+
+##### StoreWithTTL kao keš
+
+Interfejs `StoreWithTTL` je možda zgodno proširiti da prihvata tokene-strance, tako da može da posluži i kao keš, ako se za to ukaže potreba:
+
+```go
+    type StoreWithKey interface {
+    	StoreWithTTL
+    	func StoreWithKeyAndTTL(key string, payload interface, ttl time.Duration) error
+    	func StoreWithKey(key string, payload interface) error
+    }
+```
+
+
 
 
 
