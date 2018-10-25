@@ -1185,7 +1185,7 @@ type tokenStore struct {
 }
 ```
 
-Ovako struktura `syncedMapStore` postaje nerazdvojni deo strukture `tokenStore`, kao zakrpa na vreći. S'tim u vezi, primetimo jednu jako interesantnu stvar. Ako i sada, kao ranije, časkom napišemo odgovarajući konstruktor za `tokenStore`, komapjler više ne kmeči. Zašto?
+Ovako struktura `syncedMapStore` postaje nerazdvojni deo strukture `tokenStore`, kao zakrpa na vreći. S'tim u vezi, primetimo jednu jako interesantnu stvar. Ako i sada, kao ranije, časkom napišemo odgovarajući konstruktor za `tokenStore`, kompajler više ne kmeči. Zašto?
 ```go
 func NewTokenStore(ttl time.Duration) Store {
 	mu := sync.Mutex{}
@@ -1226,7 +1226,7 @@ Ovim smo samo dali tokenima novu funkcionalnost (rok trajanja), ali ovim se pri�
 
 ###  Kuda dalje?
 
-Ovim smo završili ono što smo ovde za sada nameravali implementirati, ali šta dalje? Drugim rečima, šta nam to još fali, a moglo bi zatrebati? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira. Svaki *Pull Request* ću rado pregledati, i, ako je dovoljno dobar, prihvatiti u ovaj repo.
+Ovim smo završili ono što smo ovde za sada nameravali implementirati, ali šta dalje? Drugim rečima, šta nam to još fali, a moglo bi zatrebati? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira. Svaki *Pull Request* ću rado pregledati, i, ako je OK, prihvatiti u ovaj repo.
 
 ##### Različiti TTL-ovi
 
@@ -1255,13 +1255,13 @@ Fabriku tokenRingova bi valjalo prepraviti da bude ttl-*aware*, i uz malkice jo�
 
 Ako vaš *host* čini više različitih mašina koje rakolje iza nekakvog *load balancer*-a, neophodno je da sve mašine imaju istu kopiju `TokenStore`-a, da bi stvar radila.
 
-U tu svrhu, bilo bi zgodno da `TokenStore` hostuje nekakav HTTP (REST?) end-point kojim može da primi tokene koje su `TokenStore`-ovi sa drugih mašina kreirali, kao i to da može publikovati tokene koje je sam kreirao. Uz to, bilo bi zgodno da se `TokenStore`-ovi sami pronalaze na mreži, bez ikakve konfiguracije, a i to da, čim se neka nova mašina pojavi, da ima načina da od starih mašina primi sve tokene koji su trenutno važeći.
+U tu svrhu, bilo bi zgodno da `TokenStore` hostuje nekakav HTTP (REST?) *end-point* kojim može da primi tokene koje su `TokenStore`-ovi sa drugih mašina kreirali, kao i to da može publikovati tokene koje je sam kreirao. Uz to, bilo bi zgodno da se `TokenStore`-ovi sami pronalaze na mreži, bez ikakve konfiguracije, a i to da, čim se neka nova mašina pojavi, da ima načina da od starih mašina primi sve tokene koji su trenutno važeći.
 
 Ovde treba voditi računa o tipu podataka, jer payload-ove sa različitih mašina valja serijalizovati/deserijalizovati preko mreže. Json?
 
 ##### Perzistentni TokenStore
 
-Iako nije sasvim obavezno, mašine se ponekad moraju restartovati/rekreirati, tako da bi isto tako bilo zgodno da TokenStore ima načina da u nekom intervalu serijalizuje svoj sadržaj u neku perzistentnu memoriju (recimo disk, mada i ovo treba biti konfigurabilno), tako da nove mašine mogu da se inicijalizuju recimo odatle. 
+Mašine se ponekad moraju restartovati/rekreirati, tako da bi isto tako bilo zgodno da TokenStore ima načina da u nekom intervalu serijalizuje svoj sadržaj u neku perzistentnu memoriju (recimo disk, mada i ovo treba biti konfigurabilno), tako da nove mašine mogu da se inicijalizuju recimo odatle.
 
 
 
