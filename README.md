@@ -750,7 +750,7 @@ Sada ako izvršimo ove testove, dobijamo nešto ovako:
     FAIL	github.com/aboutgo/token	0.030s    
 ```
 
-Drugim rečima, tečki pičvajz. Za red veličine gori nego onaj od malopre, namerni. 
+Drugim rečima, teški pičvajz. Za red veličine gori nego onaj od malopre, namerni.
 
 Problem je u tome što `mapStore` nije *thread-safe*. Zamislite barmena u nekom baru koji, čim mu neki gost poviče "pivo", a on odmah, kao robot, slepo stavlja novu kriglu na punjenje, ne vodeći pri tom računa da li se tamo već nalazi neka druga krigla koja je već na punjenju. Na podu će neminovno biti mnogo razbijenog stakla, zar ne?
 
@@ -776,9 +776,9 @@ Nama trenutno treba način da sinhronizujemo pristup mapi `mapStore`. U tu svrhu
     var mu sync.Mutex
 ```
 
-Sada je jednostavno. Na ulasku u zonu koju štitite pozovete `mu.Lock()`, na izlasku - `mu.Unlock()`. Ako neka nit naiđe na `mu.Lock()` u momentu kada je pre nje neka druga nit već prošla muteks, ona će čekati "na crveno" da ta druga nit napravi `mu.Unlock()`. Ako ima mnogo niti, ispred muteksa zna da se ponekad napravi kolona, ali će Go puštati kroz mutex jednu po jednu, kao panduri kad na autoputu sa više traka nešto pregrade, tako da saobraćaj sliju u samo jednu traku, puštajući vozila u koloni jedno po jedno.
+Sada je jednostavno. Na ulasku u zonu koju štitite pozovete `mu.Lock()`, na izlasku - `mu.Unlock()`. Ako neka nit naiđe na `mu.Lock()` u momentu kada je pre nje neka druga nit već prošla muteks, ona će čekati "na crveno" da ta druga nit napravi `mu.Unlock()`. Ako ima mnogo niti, ispred muteksa zna da se ponekad napravi kolona, ali će Go puštati kroz mutex jednu po jednu, kao murija kad na autoputu sa više traka nešto pregradi, pa saobraćaj sliju u samo jednu traku, puštajući vozila u koloni jedno po jedno.
 
-Problemčić je što naš `mapStore` nema mesta za jedan takav muteks. Doduše... budući da mapa može da primi sve što je kompatibilno sa `interface{}`, ona bi mogla i da proguta muteks pod nekim konstantnim ključem, na primer. Ali problem time ne bi nestao. Da bi se došlo do muteksa sačuvanog u mapi, moramo *čitati* iz mape, a to je upravo ono što pokušavamo da sinhronizujemo. 
+Problemčić je što naš `mapStore` nema mesta za jedan takav muteks. Doduše... budući da mapa može da primi sve što je kompatibilno sa `interface{}`, ona bi mogla i da proguta muteks pod nekim konstantnim ključem, na primer. Ali problem time ne bi nestao. Da bi se došlo do muteksa sačuvanog u mapi, morali bi *čitati* iz mape, a to je upravo ono što pokušavamo da sinhronizujemo.
 
 U Go-u, za ovaj posao služe strukture. One su mnogo sličnije strukturama u C-u nego klasama u Javi, s' tom razlikom što strukture u Go-u mogu imati metode. Stari kod napisan za potrebe `mapStore` nećemo ni bacati, niti menjati, nego ćemo ga prosto ponovo iskoristiti. Ne zato što je tako jednostavnije (u stvari, nije), nego da bi pokazali jednu od tehnika pomoću koje je moguće postiću efekat nasleđivanja iz jezika koji poznaju klase.
 
@@ -962,17 +962,17 @@ Vreme ispod jedne sekunde uopšte nije loše za sabiranje tolike količine broje
 	s += sum(1*1000*1000*1000 + 1, 2*1000*1000*1000) 
 	s += sum(2*1000*1000*1000 + 1, 3*1000*1000*1000) 
 	elapsed := time.Since(start)
-	fmt.Println(s, elapsed) // štampa 4500000001500000000 912.923119ms
+	fmt.Println(s, elapsed)
 ```
 ```
-    štampa 4500000001500000000 912.923119ms
+    4500000001500000000 912.923119ms
 ```
 
 Ipak, na pravom smo putu. Najbolje je da ova tri poziva pokrenemo kao 3 paralelne go-rutine koje bi se izvršavale istovremeno. Ukupno vreme rada će ostati isto, ali, zbog paralelizma, vreme čekanja na rezultat biće svedeno otprilike na trećinu. Trojica radnika iskopaju kanal za trećinu vremena nego što bi to uradio jedan radnik, zar ne?
 
 Međutim naša funkcija `sum()`, takva kakva je, potpuno je nepogodna za tako nešto. Ona vraća rezultat kao izlaznu vrednost, i tu vrednost je sposobna da vrati samo pozivaču iz iste niti u kojoj je i ona sama. Mi i dalje možemo postići da se pozivi `sum()`-a izvršavaju u paralelnim nitima, ali ti pozivi bi se ponašali kao 3 balona napunjena helijumom. Jednom pušteni, oni ne bi imali nikakvu komunikaciju sa zemljom, niti bi ih mi mogli na ikoji način kontrolisati.
 
-Probajmo nešto skroz blesavo. Go dopušta bezimene (unutrašnje) funkcije koje možete izvući "kano ljutu guju iz njedara" (*closures*), a koje imaju direktan pristup lokalnim promenljivima deklarisanim u glavnoj niti. Ako bi lansirali jednu takvu funkciju 3 puta, interesantno je pitanje kakav će biti rezultat:
+Probajmo nešto skroz blesavo. Go dopušta bezimene (unutrašnje) funkcije koje možete izvući "kano ljute guje iz njedara" (*closures*), a koje imaju direktan pristup lokalnim promenljivima deklarisanim u glavnoj niti. Ako bi lansirali jednu takvu funkciju 3 puta, interesantno je pitanje kakav će biti rezultat:
 
 ```go
 	start := time.Now()
@@ -1003,7 +1003,7 @@ Ipak, rezultat koda gore je njesra:
 
 Iako se ništa nije zaglavilo, jer je u Go-u sabiranje celobrojnih vrednosti očigledno atomska operacija koja se ne može se usred posla prekinuti, ovaj rezultat, kao prvo, uopšte nije tačan. Stvarno, kako to da smo na promenljivu `s` očigledno dodali svih 3 milijarde brojeva koje smo trebali dodati, a ipak dobili netačan rezultat?
 
-Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i da zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit A upiše novo `s`, ona će da prejaše plodove rada niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
+Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i da zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit A upiše novo `s`, ona će da razyebe doprinos niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
 
 Osim toga, u kodu gore ima jedan veeeeeliki bag. Sve što smo rekli za `s` važi i za `doneCounter`, tako da smo prosto imali sreće da `doneCounter` nije prezupčio na isti način kao `s`. Da se to desilo, uzaludno bi čekali da se ove 3 go-rutine završe. U stvari, one bi se jadne još i završile, samo mi to ne bismo znali. Zato nikada ne inkrementirajte brojeve na ovaj način. Koristite `doneCounter++`, što je u Go-u atomska operacija.
 
@@ -1073,7 +1073,11 @@ Snabdene voki-tokijem ili ne, go-rutine, jednom lansirane, ponašaju se kao puš
 Da bi ilustrovali poentu, učinićemo našu funkciju `suma` namerno nestašnom, da bi je kasnije ukrotili. Recimo da funkcija na početku sa verovatnoćom 0.25 odlučuje da li da spava jednu čitavu sekundu ili ne. Ovako simuliramo nepredvidljivost vremena izvršavanja. U realnom životu, ova nepredvidljivost može nastati zbog nekog upita upućenoj nekoj preopterećenoj bazi podataka, ili zbog nekog pičvajza na mreži, nebitno:
 
 ```go
+    rand.Seed(time.Now().UTC().UnixNano())
+    ...
 	suma := func(m, n int, c chan int) {
+
+	}
 		if (rand.Intn(4) == 0) {
 			time.Sleep(1 * time.Second)
 		}
@@ -1122,7 +1126,7 @@ Sada ćemo kreirati kanal kojoj ćemo predati go-rutini `wait`, a u `select`-u �
 	}
 ```
 
-Naredba `select` služe za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća, ali, šta god da naiđe na nekom od kanala, program će izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, dušu dala za tajmere. Ona nam vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio kuršlus i da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
+Naredba `select` služe za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća, ali, šta god da naiđe na nekom od kanala, program će izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, dušu dala za tajmere. Ona nam vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desilo njesra i da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
 
 ---
 
@@ -1173,34 +1177,34 @@ func (e *envelope) expired() bool {
 }
 ```
 
-Naša nova implementacija interfejsa `Store` se zove `TokenStore`. Ona proširuje postojeću strukturu `syncedMapStore`, a uz to i definiše TTL: 
+Naša nova implementacija interfejsa `Store` se zove `tokenStore`. Ona proširuje postojeću strukturu `syncedMapStore`, a uz to i definiše TTL:
 ```go
-type TokenStore struct {
+type tokenStore struct {
 	syncedMapStore
 	ttl time.Duration
 }
 ```
 
-Primetimo jednu jako interesantnu stvar. Ako i sada, kao ranije, časkom napišemo odgovarajući konstruktor za `TokenStore`, komapjler više ne kmeči. Zašto?
+Ovako struktura `syncedMapStore` postaje nerazdvojni deo strukture `tokenStore`, kao zakrpa na vreći. S'tim u vezi, primetimo jednu jako interesantnu stvar. Ako i sada, kao ranije, časkom napišemo odgovarajući konstruktor za `tokenStore`, komapjler više ne kmeči. Zašto?
 ```go
 func NewTokenStore(ttl time.Duration) Store {
 	mu := sync.Mutex{}
 	syncedMapStore := syncedMapStore{mapStore{}, &mu}
-	return &TokenStore{syncedMapStore, ttl}
+	return &tokenStore{syncedMapStore, ttl}
 }
 ```
 
-To je zato što `TokenStore` već implementira `Store`. Ovo nije lako odmah videti, ali u Go-u, ako strukturu koja implementira neki interfejs ugnezdite na ovaj način u neku drugu strukturu, onda se toj novoj strukturi priznaje da implementira isti interfejs.
+To je zato što `tokenStore` već implementira `Store`. Ovo nije lako odmah videti, ali u Go-u, ako strukturu koja implementira neki interfejs ugnezdite na ovaj način u neku drugu strukturu, onda se toj novoj strukturi priznaje da implementira isti interfejs. Zgodno, zar ne?
 
-Ipak, mi ovde moramo prejahati obe metode, zbog potrebe pakovanja i raspakivanja koverti koju nismo imali ranije:
+Ipak, mi ovde moramo prejahati obe metode, zbog potrebe pakovanja i raspakivanja koverti koje nismo imali ranije:
 
 ```go
-func (mem *TokenStore) Store(payload interface{}) (string, error) {
+func (mem *tokenStore) Store(payload interface{}) (string, error) {
 	envelope := envelope{payload, time.Now(), mem.ttl}
 	return mem.syncedMapStore.Store(&envelope)
 }
 
-func (mem *TokenStore) Fetch(token string) (interface{}, error) {
+func (mem *tokenStore) Fetch(token string) (interface{}, error) {
 	envelopeProbe, err := mem.syncedMapStore.Fetch(token)
 	if err != nil {
 		return nil, err
@@ -1215,7 +1219,7 @@ func (mem *TokenStore) Fetch(token string) (interface{}, error) {
 	return envelope.payload, nil
 }
 ```
-Ovim smo dali tokenima novu funkcionalnost, rok trajanja, ali ovim se priča ne završava. Izjanđale tokene valja čistiti, ali kako?
+Ovim smo samo dali tokenima novu funkcionalnost (rok trajanja), ali ovim se priča ne završava. Izjanđale tokene valja čistiti, ali kako?
 
 ---
 
