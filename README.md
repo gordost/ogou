@@ -649,7 +649,7 @@ import "testing"
 func TestSomething(t *testing.T) {...} 
 ```
 
-Paket `testing` je *built-in* paket koji nam pomaže kod testiranja. Da ne bi mnogo palamudili, napiåimo øaskom neåto. Lice imamo (`Store`), glumca imamo (`mapStore`), napišimo onda kratak unit-test u fajlu `token/mapstore_test.go` kojim ćemo ovog glumca podvrgnuti nekakvom izazovu:
+Paket `testing` je *built-in* paket koji nam pomaže kod testiranja. Da ne bi mnogo palamudili, napišimo časkom nešto. Lice imamo (`Store`), glumca imamo (`mapStore`), napišimo onda kratak unit-test u fajlu `token/mapstore_test.go` kojim ćemo ovog glumca podvrgnuti nekakvom izazovu:
 ```go
 // ./token/mapstore_test.go
 package token
@@ -657,6 +657,12 @@ package token
 import (
 	"testing"
 )
+
+var mapstore = NewMapStore()
+
+func TestMapStoreFetch(t *testing.T) {
+	testStoreFetch(t, mapstore)
+}
 
 const samplePayload = "something"
 const notAToken = "notAToken"
