@@ -15,21 +15,19 @@ func NewTokenStore(ttl time.Duration, initialCapacity int) Store {
 	mu := sync.Mutex{}
 	syncedMapStore := syncedMapStore{mapStore{}, &mu}
 	factory := newTokenRingFactory(initialCapacity)
-	first := factory.manufacture()
-	return &TokenStore{syncedMapStore, ttl, first, factory}
+	curr := factory.manufacture()
+	return &TokenStore{syncedMapStore, ttl, curr, factory}
 }
 
 type TokenStore struct {
 	syncedMapStore
 	ttl              time.Duration
-	tokenRing        *tokenRing
+	curr             *tokenRing
 	tokenRingFactory *tokenRingFactory
 }
 
 func (mem *TokenStore) Store(payload interface{}) (string, error) {
 	envelope := envelope{payload, time.Now(), mem.ttl}
-	mem.mu.Lock()
-	defer mem.mu.Unlock()
 	return mem.store(&envelope)
 }
 
@@ -58,26 +56,27 @@ func (mem *TokenStore) Enum(callback func(string, interface{}, bool, time.Durati
 }
 
 func (mem *TokenStore) store(envelope *envelope) (string, error) {
-	token, err := mem.mapstore.Store(*envelope)
+	token, err := mem.syncedMapStore.Store(*envelope)
 	if err != nil {
 		return "", err
 	}
 	entry := entry{token, envelope}
 	storeAndBudge := func() {
-		mem.tokenRing.entry = &entry
-		mem.tokenRing = mem.tokenRing.next
+		mem.curr.entry = &entry
+		mem.curr = mem.curr.next
 	}
-	if e := mem.tokenRing.entry; e == nil {
+	mem.mu.Lock()
+	defer mem.mu.Unlock()
+	if e := mem.curr.entry; e == nil {
 		storeAndBudge()
 		return token, nil
 	}
-	if e := mem.tokenRing.entry.envelope; e.expired() {
-		delete(mem.mapstore, mem.tokenRing.entry.token)
+	if e := mem.curr.entry.envelope; e.expired() {
+		delete(mem.mapstore, mem.curr.entry.token)
 		storeAndBudge()
 		return token, nil
 	}
 	mem.expandTokenRing()
-	mem.tokenRing = mem.tokenRing.next
 	storeAndBudge()
 	return token, nil
 }
@@ -105,8 +104,9 @@ type tokenRing struct {
 
 func (mem *TokenStore) expandTokenRing() {
 	first := mem.tokenRingFactory.manufacture()
-	first.prev.next = mem.tokenRing.next
-	mem.tokenRing.next = first
+	first.prev.next = mem.curr.next
+	mem.curr.next = first
+	mem.curr = mem.curr.next
 }
 
 type tokenRingFactory struct {
@@ -135,12 +135,10 @@ func (fct *tokenRingFactory) manufacture() *tokenRing {
 		fct.demandCounter++
 		fct.spareChannel <- first
 	}
-	if fct.demandCounter <= 0 {
+	if fct.demandCounter < 0 {
 		makeNew()
 	}
-	defer func() {
-		go makeNew()
-	}()
+	go makeNew()
 	return <-fct.spareChannel
 }
 

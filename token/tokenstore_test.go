@@ -58,7 +58,7 @@ func TestTokenStoreStoreFetch(t *testing.T) {
 	if len(mem.mapstore) != initialCapacity {
 		t.Fatalf(unexpectedLengthOfEntryMap, initialCapacity, len(mem.mapstore))
 	}
-	checkCount(t, mem.tokenRing, filterValid, 1, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, filterValid, 1, unexpectedCountOfValidEntries)
 }
 
 func TestTokenStoreConcurrency(t *testing.T) {
@@ -119,37 +119,37 @@ func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
 	if !ok {
 		t.Fatal("no all go routines finished within timeout")
 	}
-	checkCount(t, mem.tokenRing, nil, expected, unexpectedRingCapacity)
+	checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
 	t.Logf("Stress test elapsed time: %v", time.Since(start))
 }
 
 func testTokenStore(t *testing.T, capacity int) {
 	store := NewTokenStore(ttl, capacity)
 	mem, _ := store.(*TokenStore)
-	checkCount(t, mem.tokenRing, nil, capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, nil, capacity, unexpectedRingCapacity)
 
 	for i := 0; i < capacity; i++ {
 		store.Store("pay" + string(i))
 	}
 
-	checkCount(t, mem.tokenRing, nil, capacity, unexpectedRingCapacity)
-	checkCount(t, mem.tokenRing, filterValid, capacity, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, nil, capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, filterValid, capacity, unexpectedCountOfValidEntries)
 
 	store.Store("newguy")
-	checkCount(t, mem.tokenRing, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.tokenRing, filterValid, capacity+1, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, filterValid, capacity+1, unexpectedCountOfValidEntries)
 	if len(mem.mapstore) != capacity+1 {
 		t.Fatalf(unexpectedLengthOfEntryMap, capacity+1, len(mem.mapstore))
 	}
 
 	time.Sleep(ttl)
-	checkCount(t, mem.tokenRing, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.tokenRing, filterValid, 0, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, filterValid, 0, unexpectedCountOfValidEntries)
 	for i := 0; i < capacity+1; i++ {
 		store.Store("pay" + string(10000+i))
 	}
-	checkCount(t, mem.tokenRing, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.tokenRing, filterValid, capacity+1, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, filterValid, capacity+1, unexpectedCountOfValidEntries)
 
 	store.Store("newguy2")
 	if len(mem.mapstore) != 2*capacity {
@@ -159,8 +159,8 @@ func testTokenStore(t *testing.T, capacity int) {
 	for i := 0; i < 3*capacity+1; i++ {
 		store.Store("pay" + string(10000+i))
 	}
-	checkCount(t, mem.tokenRing, nil, 8*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.tokenRing, filterValid, 4*capacity+2+1, unexpectedCountOfValidEntries)
+	checkCount(t, mem.curr, nil, 8*capacity, unexpectedRingCapacity)
+	checkCount(t, mem.curr, filterValid, 4*capacity+2+1, unexpectedCountOfValidEntries)
 }
 
 func filterValid(tr *tokenRing) bool {
