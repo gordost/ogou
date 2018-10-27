@@ -646,9 +646,9 @@ Na kraju, sa stanovišta klijenta, ovako se kod konzumira ono što smo do sada n
     fmt.Println(token, payload)
 ```
 
->Napomena: funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke, ili zaista opasni frajeri sa velikim mudima, paniče*. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako se ipak uspaničite, budite frajer i potrudite se da negde napravite `recover`, jer u suprotnom vaš će program odvaliti nosom o ledinu.
+>Funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke, ili opasni frajeri, paniče*. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako se ipak uspaniče, treba biti frajer i potruditi se negde napraviti `recover()`, jer u suprotnom program će odvaliti nosom o ledinu.
 >
->Kad smo već kod toga: Go ima nešto što liči na Javinu obradu izuzetaka, ali ovo se ređe koristi. Ovaj mehanizam je baziran na standardnim `panic()` - `defer()` - `recover()` funkcijama. Ukratko, ako pozovete neku funkciju za koju znate da može da paniči, njenu paniku imate šansu smiriti u nekoj od vaših `defer` funkcija. Na ovaj način program ima šansu da se izvuče bez teške havarije:
+>Kad smo već kod toga: Go ima nešto što liči na Javinu obradu izuzetaka, ali ovo se ređe koristi. Ovaj mehanizam je baziran na standardnim `panic()` - `defer()` - `recover()` funkcijama. Ukratko, kad pozovete neku funkciju za koju znate da može da paniči, njenu eventualnu paniku možete smiriti u nekoj od vaših `defer` funkcija. Na ovaj način program ima šansu da se izvuče bez havarije:
 
 ```go
     defer func() {
@@ -665,7 +665,7 @@ Na kraju, sa stanovišta klijenta, ovako se kod konzumira ono što smo do sada n
     }
 ```
 
->Ipak, nije lako naći mesto gde se ovaj mehanizam planski koristi. Jedno takvo mesto je `json` paket, koji ima potrebu za sintaksnom analizom teksta u JSON formatu. Sintaksni analizatori su obično puni rekurzivnih poziva koji znaju otići u veeeelike dubine. Zamislite sada situaciju u kojoj na dubini od 1000 metara neki od tih rekurzivnih poziva pronađe da tenkre koji je kreirao JSON nije zatvorio desnu zagradu. Ko će bre sada da se zeza i da korektno isprogramira da svaki od poziva uz *call stack* elegantno izađe? Daleko je lakše paničiti, a paniku smiriti u `defer` funkciji na površini, zar ne?
+>Ipak, nije lako naći mesto gde se ovaj mehanizam planski i svesno koristi. Jedno takvo mesto je `json` paket, koji ima potrebu za sintaksnom analizom teksta u JSON formatu. Sintaksni analizatori su obično puni rekurzivnih poziva koji znaju otići u veeeelike dubine. Zamislite sada situaciju kad na dubini od 1000 metara neka od tih rekurzija pronađe da tenkre koji je kreirao JSON nije zatvorio desnu zagradu! Ko će bre sada da se zeza i da korektno isprogramira svaki od poziva uzduž *call stack*-a da elegantno izađe? Daleko je lakše paničiti, a paniku smiriti `defer` funkcijom u čamcu na površini vode, zar ne?
 
 ###### Unit testovi u Go-u
 
