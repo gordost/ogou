@@ -370,15 +370,15 @@ Naš bafer će svejedno biti napunjen... uglavnom, ali ovo je totalno pogrešno.
 
 ---
 
-Sada dolaze na red 3 linije koje su na prvi pogled proste kao pasulj, ali na kojoj ćemo se zadržati jer se ovde zaista radi o jako važnim stvarima. Radi se o proveri izlazne vrednosti `err`:
+Sada dolaze na red 3 linije koje su na prvi pogled proste kao pasulj, ali na kojima ćemo se zadržati jer se ovde zaista radi o jako važnim stvarima. Radi se o proveri izlazne vrednosti `err`:
 ```go
 	if err != nil {
 		return "", err
 	}
 ```
-Kad smo bili šiljokurani, sećam se da su nas učili vrlinama nečega što se onda (a valjda i sada?) zvalo strukturno (ili strukturalno, jebemliga) programiranje. Sve nešto kao GOTO naredba ne valja, nešto o dobroti grananja `if`-ova i `else`-ova, a naročito to da `return` naredba treba da bude na kraju procedure, tako da se algoritam na izlasku iz svih onih silnih `if`-ova, `else`-ova i petlji prosto ulije u nju. U stvari, kad razmislim, učili su nas da pišemo kod koji je bio jednako težak za čitanje kao Krleža. Za ilustraciju koliko ovo može biti zajebano, naučio sam napamet jednu Krležinu rečenicu sa nekog njegovog gostovanja u studiju na televiziji. Čim je uzeo reč, rekao je nešto ovako:
+Kad smo bili šiljokurani, sećam se da su nas učili vrlinama nečega što se onda (a valjda i sada?) zvalo strukturno (ili strukturalno, jebemligaveć) programiranje. Sve nešto kao GOTO naredba je šit, nešto o dobroti grananja `if`-ova i `else`-ova, a naročito to da `return` treba da bude na kraju procedure, tako da se algoritam na izlasku iz svih onih silnih `if`-ova, `else`-ova i petlji prosto ulije u nju. Ovo je valjda imalo veze sa nekakvom dokazivošću korektnosti algoritama, ali u stvari, kad razmislim, učili su nas da pišemo kod koji je bio jednako težak za čitanje kao Krleža. Za ilustraciju koliko ovo može biti zeznuto, naučio sam napamet jednu Krležinu rečenicu sa nekog njegovog gostovanja u studiju na televiziji. Čim su mu dali reč, izvalio je nešto ovako:
 
-> Posmatrajući to pitanje sa stanovišta moralno-političkih kompetencija, moram vam reći da stvar zrači vrlo fluidno i da nikakva insinuacija endogenih funkcija nije u mom domenu.
+> Posmatrajući to pitanje sa stanovišta moralno-političkih kompetencija, moram vam reć da stvar zrači vrlo fluidno, te da nikakva insinuacija endogenih funkcija nije u mom domenu.
 
 Ma idi begaj!
 
@@ -417,9 +417,9 @@ func random() (string, error) {
 }
 ```
 
-E sad: kako nešto što je 4 linije duže i jedan stepen uvlačenja teksta dublje može da bude bolje, a u stvari je isto? Čak i na ovako malom primeru, prvi listing podseća na onu Krležinu rečenicu gde je on u suštini hteo da kaže... eeer... ovaj... kašljuc.... dobro, ajde, nije baš da znam šta je hteo da kaže, ali u tome i jeste poenta.
+E sad: kako nešto što je 4 linije duže i jedan stepen uvlačenja teksta dublje može da bude bolje, a u stvari je isto? Čak i na ovako malom primeru, prvi listing podseća na onu Krležinu rečenicu gde je on u suštini hteo da kaže... eeee... ovaj... (kašljuc).... dobro, 'ajde, nije baš da znam šta je time hteo da kaže, ali u tome i jeste poenta.
 
-Zato prihvatite kao prvu od 10 zapovesti programiranja da je palamuđenje o `return` naredbi opisano gore mlaćenje prazne slame. Nađite način da iz funkcije izađete što je moguće ranije, čim se za to steknu uslovi, i pobrinite se za to da se uslovi steknu što bliže početku funkcije, a što dalje kraju (na kraju funkcije treba da se izvršava kod predviđen za situaciju kada je sve bilo bez greške). I uvek učinite sve što je u vašoj moći da izbegnete `else`. Jer `else` je zlo, a bogami i naopako. 
+Zato prihvatite kao prvu od 10 zapovesti programiranja u Go-u da je palamuđenje o `return` naredbi opisano gore mlaćenje prazne slame. Nađite način da iz funkcije izađete što je moguće ranije, čim se za to steknu uslovi, i pobrinite se za to da se uslovi steknu što bliže početku funkcije, a što dalje kraju (na kraju funkcije treba da se izvršava kod kada je sve bilo bez greške). I uvek učinite sve što je u vašoj moći da izbegnete `else`. Jer `else` je zlo, a bogami i naopako. 
 
 ###### Još malkice o `else`
 
@@ -448,15 +448,15 @@ Uprkos lepoti ove konstrukcije, nemojte koristiti ovu varijantu `if`-a. Ona pros
 
 ---
 
-Ovo što smo do sada rekli o greškama je primenljivo na sve programske jezike, ali, kada se radi o Go-u, uvek preferirajte stil koji se u jednoj rečenici može opisati kao *brigo moja, pređi na drugoga!* E to je upravo ono što smo uradili u ove tri linije koda :smile: Čim dođe do greške, odmah vrući kesten uvaljujemo onome ko nas je zvao, i zadovoljno peremo ruke. 
+Ovo što smo do sada rekli o greškama je primenljivo na sve programske jezike, ali, kada se radi o Go-u, uvek preferirajte stil koji se u jednoj rečenici može opisati sa *brigo moja, pređi na drugoga!* E to je upravo ono što smo uradili u ove tri linije koda :smile: Čim dođe do greške, odmah vrući kesten uvaljujemo onome ko nas je zvao, i zadovoljno peremo ruke. 
                                                                          
-Međutim, nije sve baš tako prosto: *bar na jednom mestu* u vašem programu morate imati nekakvog sakupljača grešaka koji će sa njima nešto da radi. Jedan od najboljih kandidata za to mesto je `main()` u paketu `main`, a to su funkcija i paket koje morate imati ako želite da se vaš program izvrši (ako nigde nemate `main.main()`, vaš program nije program, nego biblioteka). E sad, šta sakupljač grešaka treba pametno sa njima da radi? Logovanje grešaka u fajl je dobra stvar. Ispis grešaka na ekran je takođe dobra stvar. A ako je greška suviše ozbiljna, nije zgoreg ponekad pozvati i `panic()`. Program će na ovaj način završiti u jarku pored puta, ali to je ponekad zaista najbolje, zar ne? 
+Međutim, nije sve baš tako prosto: *bar na jednom mestu* u vašem programu morate imati nekakvog sakupljača grešaka koji će sa njima nešto da radi. Jedan od najboljih kandidata za to mesto je `main()` u paketu `main`, a to su funkcija i paket koje morate imati ako želite da se vaš program izvrši (ako nigde nemate `main.main()`, vaš program nije program, nego biblioteka). E sad, šta sakupljač grešaka treba pametno sa njima da radi? Logovanje grešaka u fajl je dobra stvar. Ispis grešaka na ekran je takođe dobra stvar. A ako je greška suviše ozbiljna, nije zgoreg ponekad pozvati i `panic()`. Program će na ovaj način završiti u kanalu, ali to je ponekad zaista najbolje. 
 
 ###### Poređenje sa Javom
 
-U Javi, greška se zove izuzetak (*exception*), a obrada grešaka - obrada izuzetaka (*exception handling*). Go nema obradu izuzetaka kao Java, čime se želi reći da nema nešto ni nalik na *try-catch-finally* - blokove iz Jave. Ipak, zapitajmo se: koliko su ovi blokovi bolji od onog što Go ima? 
+U Javi, greška se zove izuzetak (*exception*), a obrada grešaka - obrada izuzetaka (*exception handling*). Go nema obradu izuzetaka kao Java, čime se želi reći da nema ništa nalik *try-catch-finally* - blokovima iz Jave. Ipak, zapitajmo se: koliko su ovi blokovi bolji od onog što Go ima? 
 
-Pogledajmo kako izgleda jedan tipičan *try-catch-finally* blok u Javi, a kako njegov ekvivalent u Go-u. Zamislite da imamo nekakvu funkciju `open()` koja vraća neki resurs koji na kraju balade treba zatvoriti, ali koji zna i da baci izuzetak ukoliko resurs zbog nečeg ne može da se napravi. U Javi, *try-catch-finally* blok za ovo tipično izgleda ovako: 
+Pogledajmo kako izgleda jedan tipičan *try-catch-finally* blok u Javi, a kako njegov ekvivalent u Go-u. Zamislimo da imamo nekakvu funkciju `open()` koja vraća nekakav resurs koji se na kraju balade treba zatvoriti, ali koja zna i da baci izuzetak ukoliko resurs zbog nečeg ne može da se napravi. U Javi, *try-catch-finally* blok za ovo tipično izgleda ovako: 
 
 ```java
     try {
@@ -475,7 +475,7 @@ Pogledajmo kako izgleda jedan tipičan *try-catch-finally* blok u Javi, a kako n
         }
     }
 ```
-E sad, iako je Javina obrada izuzetaka po mnogima do jaja, čak i u ovom maleckom primeru možete naći čak četiri WTF-a:
+E sad, iako je Javina obrada izuzetaka po mnogima do jaja, čak i u ovom maleckom primeru možete nabrojati čak četiri WTF-a:
 
 1. Izuzeci se često obrađuju u blokovima koji su vizuelno daleko od mesta gde su nastali, pa morate stalno da upirete pogled gore-dole
 2. Resursi se još češće zatvaraju u bloku koji je vizuelno daleko od mesta gde su nastali, što ume da dovede do zaborava (curenja memorije)
@@ -646,8 +646,26 @@ Na kraju, sa stanovišta klijenta, ovako se kod konzumira ono što smo do sada n
     fmt.Println(token, payload)
 ```
 
-Napomena: funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke paniče*. A ako se ipak uspaničite, potrudite se da negde napravite `recover`, jer u suprotnom vaš će program odvaliti nosom o ledinu.
+>Napomena: funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke, ili zaista opasni frajeri sa velikim mudima, paniče*. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako se ipak uspaničite, budite frajer i potrudite se da negde napravite `recover`, jer u suprotnom vaš će program odvaliti nosom o ledinu.
+>
+>Kad smo već kod toga: Go ima nešto što liči na Javinu obradu izuzetaka, ali ovo se ređe koristi. Ovaj mehanizam je baziran na standardnim `panic()` - `defer()` - `recover()` funkcijama. Ukratko, ako pozovete neku funkciju za koju znate da može da paniči, njenu paniku imate šansu smiriti u nekoj od vaših `defer` funkcija. Na ovaj način program ima šansu da se izvuče bez teške havarije:
 
+```go
+    defer func() {
+        if r := recover(); r != nil {
+            fmt.Println("recovered")
+        }
+    }
+    mayPanic()
+
+    ...
+
+    func mayPanic() {
+        panic("panicking...")
+    }
+```
+
+>Ipak, nije lako naći mesto gde se ovaj mehanizam planski koristi. Jedno takvo mesto je `json` paket, koji ima potrebu za sintaksnom analizom teksta u JSON formatu. Sintaksni analizatori su obično puni rekurzivnih poziva koji znaju otići u veeeelike dubine. Zamislite sada situaciju u kojoj na dubini od 1000 metara neki od tih rekurzivnih poziva pronađe da tenkre koji je kreirao JSON nije zatvorio desnu zagradu. Ko će bre sada da se zeza i da korektno isprogramira da svaki od poziva uz *call stack* elegantno izađe? Daleko je lakše paničiti, a paniku smiriti u `defer` funkciji na površini, zar ne?
 
 ###### Unit testovi u Go-u
 
