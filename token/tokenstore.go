@@ -9,20 +9,22 @@ import (
 const defaultInitialCapacity = 1024
 
 func NewTokenStore(ttl time.Duration, initialCapacity int) Store {
-	if initialCapacity <= 0 {
+	if initialCapacity <= 1 {
 		initialCapacity = defaultInitialCapacity
 	}
 	mu := sync.Mutex{}
 	syncedMapStore := syncedMapStore{mapStore{}, &mu}
 	factory := newTokenRingFactory(initialCapacity)
-	curr := factory.manufacture()
-	return &TokenStore{syncedMapStore, ttl, curr, factory}
+	prev := factory.manufacture()
+	curr := prev.next
+	return &TokenStore{syncedMapStore, ttl, curr, prev, factory}
 }
 
 type TokenStore struct {
 	syncedMapStore
 	ttl              time.Duration
 	curr             *tokenRing
+	prev             *tokenRing
 	tokenRingFactory *tokenRingFactory
 }
 
@@ -63,6 +65,7 @@ func (mem *TokenStore) store(envelope *envelope) (string, error) {
 	entry := entry{token, envelope}
 	storeAndBudge := func() {
 		mem.curr.entry = &entry
+		mem.prev = mem.curr
 		mem.curr = mem.curr.next
 	}
 	mem.mu.Lock()
@@ -97,16 +100,16 @@ type entry struct {
 }
 
 type tokenRing struct {
-	prev  *tokenRing
 	next  *tokenRing
 	entry *entry
 }
 
 func (mem *TokenStore) expandTokenRing() {
-	first := mem.tokenRingFactory.manufacture()
-	first.prev.next = mem.curr.next
-	mem.curr.next = first
-	mem.curr = mem.curr.next
+	last := mem.tokenRingFactory.manufacture()
+	first := last.next
+	last.next = mem.curr
+	mem.prev.next = first
+	mem.curr = first
 }
 
 type tokenRingFactory struct {
@@ -127,11 +130,10 @@ func (fct *tokenRingFactory) manufacture() *tokenRing {
 		last := first
 		capacity := pow2(fct.demandCounter) * fct.initialCapacity
 		for i := 0; i < capacity-1; i++ {
-			last.next = &tokenRing{last, nil, nil}
+			last.next = &tokenRing{last, nil}
 			last = last.next
 		}
 		last.next = first
-		first.prev = last
 		fct.demandCounter++
 		fct.spareChannel <- first
 	}

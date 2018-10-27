@@ -1,6 +1,7 @@
 package token
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -29,22 +30,37 @@ func TestRingFactory(t *testing.T) {
 	checkCount(t, ring, nil, 16*initialCapacity, unexpectedRingCapacity)
 }
 
-func TestTokenStore(t *testing.T) {
-	testTokenStore(t, initialCapacity)
-}
-
-func TestTokenStoreStoreFetch(t *testing.T) {
+func TestTokenStoreFetch(t *testing.T) {
 	store := NewTokenStore(ttl, initialCapacity)
-	mem, _ := store.(*TokenStore)
+	tokenStore, _ := store.(*TokenStore)
+	var token string
+	var err error
 	for i := 0; i < initialCapacity; i++ {
-		_, _ = mem.Store("something" + string(i))
+		token, err = store.Store("something" + string(i))
+		if err != nil {
+			t.Fatal(err)
+		}
 	}
+	checkCount(t, tokenStore.curr, filterValid, initialCapacity, unexpectedCountOfValidEntries)
+	checkCount(t, tokenStore.curr, nil, initialCapacity, unexpectedRingCapacity)
 	time.Sleep(ttl)
-	key, err := mem.Store("another")
+	expiredProbe, err := store.Fetch(token)
+	if err == nil {
+		t.Fatal(fmt.Errorf("unexpectedly got valid token: %v:%v", token, expiredProbe))
+	}
+	if expiredProbe == nil {
+		t.Fatal(fmt.Errorf("unexpectedly got nil payload for token %v", token))
+	}
+	expired := expiredProbe.(string)
+	if expired != "something"+string(initialCapacity-1) {
+		t.Fatal(fmt.Errorf("got unexpected payload: %v:%v", token, expired))
+	}
+	key, err := store.Store("another")
 	if err != nil {
 		t.Fatal(err)
 	}
-	something, err := mem.Fetch(key)
+	checkCount(t, tokenStore.curr, nil, initialCapacity, unexpectedRingCapacity)
+	something, err := store.Fetch(key)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -55,10 +71,18 @@ func TestTokenStoreStoreFetch(t *testing.T) {
 	if s != "another" {
 		t.Fatal("unexpected stored object returned")
 	}
-	if len(mem.mapstore) != initialCapacity {
-		t.Fatalf(unexpectedLengthOfEntryMap, initialCapacity, len(mem.mapstore))
+	if len(tokenStore.mapstore) != initialCapacity {
+		t.Fatalf(unexpectedLengthOfEntryMap, initialCapacity, len(tokenStore.mapstore))
 	}
-	checkCount(t, mem.curr, filterValid, 1, unexpectedCountOfValidEntries)
+	checkCount(t, tokenStore.curr, filterValid, 1, unexpectedCountOfValidEntries)
+	for i := 0; i < initialCapacity; i++ {
+		token, err = store.Store("somethingelse" + string(i))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	checkCount(t, tokenStore.curr, filterValid, initialCapacity+1, unexpectedCountOfValidEntries)
+	checkCount(t, tokenStore.curr, nil, 2*initialCapacity, unexpectedRingCapacity)
 }
 
 func TestTokenStoreConcurrency(t *testing.T) {
@@ -121,46 +145,6 @@ func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
 	}
 	checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
 	t.Logf("Stress test elapsed time: %v", time.Since(start))
-}
-
-func testTokenStore(t *testing.T, capacity int) {
-	store := NewTokenStore(ttl, capacity)
-	mem, _ := store.(*TokenStore)
-	checkCount(t, mem.curr, nil, capacity, unexpectedRingCapacity)
-
-	for i := 0; i < capacity; i++ {
-		store.Store("pay" + string(i))
-	}
-
-	checkCount(t, mem.curr, nil, capacity, unexpectedRingCapacity)
-	checkCount(t, mem.curr, filterValid, capacity, unexpectedCountOfValidEntries)
-
-	store.Store("newguy")
-	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.curr, filterValid, capacity+1, unexpectedCountOfValidEntries)
-	if len(mem.mapstore) != capacity+1 {
-		t.Fatalf(unexpectedLengthOfEntryMap, capacity+1, len(mem.mapstore))
-	}
-
-	time.Sleep(ttl)
-	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.curr, filterValid, 0, unexpectedCountOfValidEntries)
-	for i := 0; i < capacity+1; i++ {
-		store.Store("pay" + string(10000+i))
-	}
-	checkCount(t, mem.curr, nil, 2*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.curr, filterValid, capacity+1, unexpectedCountOfValidEntries)
-
-	store.Store("newguy2")
-	if len(mem.mapstore) != 2*capacity {
-		t.Fatalf(unexpectedLengthOfEntryMap, 2*capacity, len(mem.mapstore))
-	}
-
-	for i := 0; i < 3*capacity+1; i++ {
-		store.Store("pay" + string(10000+i))
-	}
-	checkCount(t, mem.curr, nil, 8*capacity, unexpectedRingCapacity)
-	checkCount(t, mem.curr, filterValid, 4*capacity+2+1, unexpectedCountOfValidEntries)
 }
 
 func filterValid(tr *tokenRing) bool {
