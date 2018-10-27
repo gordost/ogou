@@ -1,8 +1,8 @@
 # Kraš-kurs iz Go-a jednog kivnog Javašlučara
 
-Evo već mesečak dana pišem isključivo u Go-u, pa reko' da promuhabetim nešto na tu temu. Zato odmah na startu da se izlajem: ako me išta bude nateralo da se vratim Javi, smatraću to korakom unazad. Go-u podseća na dugoprugaša koji zna i da poleti u sprint kad treba, a Java na ćelavog debeljka koji se jedva vuče, premda kasnije hrabro gura kada se zalaufa. 
+Evo već mesečak dana pišem isključivo u Go-u, pa reko' da promuhabetim nešto na tu temu. Zato odmah na startu da se izlajem: ako me išta bude nateralo da se vratim Javi, smatraću to korakom unazad. Go-u podseća na trkača koji zna da poleti u sprint kad zatreba, a Java na ćelavog debeljka koji se jedva vuče, premda kasnije hrabro gura kada se zalaufa. 
 
-Java se izvršava na virtualnoj mašini, pa prvo što treba da uradite da bi se vaš program negde izvršavao, jeste da instalirate Javašluk. Kontrasta radi, Go se kompajlira u izvršni kod mašine na kojoj ste, pa se vaš program neposredno izvršava. Javini frejmvorkovi, iako strogo gledano nisu deo jezika, nekako su postali njegov nezaobilazni deo, a to usporava programe, naročito na startu. Kontrasta radi, Gopheri preziru frejmvorkove: oni žele kôd koji je što bliže Zemlji, i koji golim rukama radi posao koji treba da radi, bez frejmvorkovskih rukavica. Java je vremenom postala previše apstraktna, i njen kod nije više lako razumeti, što važi i za iskusne programere. Kontrasta radi, Go je mnogo neposredniji i konkretan, a kod je svima lakši za čitanje. Minimalizam Go-a u svim pogledima je razlog što je Go eksplodirao u Docker-kontejnerima i primerice Lambda-servisima na AWS-u... munjevito se startuje, i odmah krene da radi svoj pos'o.
+Kao prvo, Java se izvršava na virtualnoj mašini, pa prvo što treba da uradite da bi se vaš program negde izvršavao, jeste da instalirate Javašluk. Kontrasta radi, Go se kompajlira u izvršni kod mašine na kojoj ste, pa se vaš program neposredno izvršava. Javini frejmvorkovi, iako strogo gledano nisu deo jezika, nekako su postali njegov nezaobilazni deo, a to usporava programe, naročito na startu. Kontrasta radi, Gopheri preziru frejmvorkove: oni žele kôd koji je što bliže Zemlji, i koji golim rukama radi posao koji treba da radi, bez frejmvorkovskih rukavica. Java je vremenom postala previše apstraktna, i njen kod nije više lako razumeti, što važi i za iskusne programere. Kontrasta radi, Go je mnogo neposredniji i konkretan, a kod je svima lakši za čitanje. Minimalizam Go-a u svim pogledima je razlog što je Go eksplodirao u Docker-kontejnerima i primerice Lambda-servisima na AWS-u... munjevito se startuje, i odmah krene da radi svoj pos'o.
 
 Pošto me mrzi da izmišljam brdo usiljenih primera, a ipak želim da ilustrujem jezik, stil i naročito lakoću paralelnog programiranja u Go-u, diseciraćemo ovde “algoritamčič” koji sam nedavno sklepao u vezi sa projektom na kome radim, a koji sam malkice izmenio za potrebe ovog pisanija. Ili bloga, jebemliga šta je. Ovo sve u nadi da će vam se Go dopasti kad završite čitanje. Na poređenja sa Javašlukom (kao i na prednosti Go-a u odnosu na Javašluk) nabasaćete u toku čitanja :smiley:
 
@@ -32,24 +32,24 @@ U Go-u, biblioteke se zovu paketi (`package`), tako da ova naredba daje našem p
 
 ---
 
-Primetite upotrebu VELIKIH slova u deklaraciji interfejsa `Store` i njegovih metoda. Ovo nije bezveze. Ako nešto (šta god) u datom paketu počinje velikim slovom, onda je to "nešto" vidljivo i iz drugih paketa. U Javašluku za to služi modifikator `public`, ali je meni ova ekonomičnost Go-a toliko seksi da prosto nemam reči. Kad se samo setim metričke tonaže modifikatora `public` i `private` u Javinim programima, padne mi mrak na oči, dok je u Go-u ovo mrak rešeno. Ako želite da vam u paketu nešto ostane privatno, koristite malo slovo. U suprotnom, koristite veliko. Kraj priče.
+Primetite upotrebu VELIKIH slova u deklaraciji interfejsa `Store` i njegovih metoda. Ovo nije bezveze. Ako nešto (šta god) u datom paketu počinje velikim slovom, onda je to "nešto" vidljivo i iz drugih paketa. U Javašluku za to služi modifikator `public`, ali je meni ova ekonomičnost Go-a toliko seksi da nemam reči. Kad se samo setim metričke tonaže modifikatora `public` i `private` u Javinim programima, padne mi mrak na oči, dok je u Go-u ovo mrak rešeno. Ako želite da vam u paketu nešto ostane privatno, koristite malo slovo. U suprotnom, koristite veliko. Kraj priče.
 
-Kad smo već kod toga: ja nikad nisam istinski razumeo svrhu Javinog `private` modifikatora. Stvar je u tome što je u Javi nešto *public* ako upotrebite modifikator `public` u deklaraciji tog nečeg, a *private* ako upotrebite - `private`. Ali stvar se ovde ne završava. U Javi, nešto može da bude i `/*package private*/`. Iako za ovo ne postoji službena reč (nego samo komentar; mnogi javaši smatraju da za ovo treba da se uvede službena reč), u Javi je nešto `/*package private*/` ukoliko ne upotrebite nijedan od ona dva gorespomenuta modifikatora. U tom slučaju, to "nešto" će biti vidljivo unutar svog paketa, dok za sve druge pakete - neće! E sad: razumem to za`public`... razumem i to za `/*package private*/`, jer nam vidljivost unutar istog paketa treba... ali ne razumem koji će nam qrac `private`? Pa koji to imbecil želi nešto da krije od samog sebe? U Go-u je ovo ispravno rešeno tako što nešto počinje ili velikim ili malim slovom, i ćao zdravo!
+Kad smo već kod toga: ja nikad nisam istinski razumeo svrhu Javinog `private` modifikatora. Stvar je u tome što je u Javi nešto *public* ako upotrebite modifikator `public` u deklaraciji tog nečeg, a *private* ako upotrebite - `private`. Ali stvar se ovde ne završava. U Javi, nešto može da bude i `/*package private*/`. Iako za ovo ne postoji službena reč (nego samo komentar; mnogi javašlučari smatraju da za ovo treba da se uvede službena reč), u Javi je nešto `/*package private*/` ukoliko ne upotrebite nijedan od ona dva gorespomenuta modifikatora. U tom slučaju, to "nešto" će biti vidljivo unutar svog paketa, dok za sve druge pakete - neće! E sad: razumem to za`public`... razumem i to za `/*package private*/`, jer nam vidljivost unutar istog paketa treba... ali ne razumem koji će nam qrac `private`? Pa koji to imbecil želi nešto da krije od samog sebe? U Go-u je ovo ispravno rešeno tako što nešto počinje ili velikim ili malim slovom, i ćao zdravo!
 
 ### Interfejsi
 ```go
 type Store interface {...}
 ```
-Za gujone, interfejs je obećanje koje ispunjava onaj ko ga implementira (to jest onaj ko implementira sve metode navedene u njemu). Go, za razliku od Jave, nema klase, ali, eto, ima interfejse. Interfejsi su razlog što ni u jednom trenutku nisam doživeo "besklasnost" Go-a kao falinku. Evo već skoro dve decenije koristim Javu koja ne samo da ima klase, nego bre u Javi ne možete da napišete ni redak korisnog koda van konteksta neke klase. Ipak, poslednjih godina sam često uhvatio sebe da se pitam koji će mi Javine klase? Već duže pišem Javin kod ravnajući se prema interfejsima, a klase, za koje me najčešće boli ona stvar, uglavnom koristim samo zato što je to u Javi moranje. Nasleđivanje sam odavno prestao da koristim (osim, naravno, ako se ne radi o nasleđivanju interfejsa), a omiljeni štos mi je anonimna implementacija interfejsa. U Javi, ovo je jedini način da izbegnete eksplicitnu deklariciju klase koja vam u stvari ne treba, pa valjda zato.
+Za gujone, interfejs je obećanje koje ispunjava onaj ko ga implementira (to jest onaj ko implementira sve metode navedene u njemu). Go, za razliku od Jave, nema klase, ali, eto, ima interfejse. Interfejsi su razlog što ni u jednom trenutku nisam doživeo besklasnost Go-a kao falinku. Evo već skoro dve decenije koristim Javu koja ne samo da ima klase, nego bre u Javi ne možete da napišete ni redak korisnog koda van konteksta neke klase. Ipak, poslednjih godina sam često uhvatio sebe da se pitam koji će mi Javine klase? Već duže pišem kod ravnajući se prema interfejsima, a klase, za koje me najčešće boli ona stvar, uglavnom koristim samo zato što je to u Javi moranje. Nasleđivanje sam odavno prestao da koristim (osim, naravno, ako se ne radi o nasleđivanju interfejsa), a omiljeni štos mi je anonimna implementacija interfejsa. U Javi, ovo je jedini način da izbegnete eksplicitnu deklariciju klase koja vam u stvari ne treba, pa valjda zato.
 
-Naravno, nigde ne treba biti potpuno isključiv: iako za to postoje alternativne tehnike, i u Javi ponekad valja praviti klasne hijerarhije da ne bi morali da duplirate sopstveni kod. Ipak, model u kojem se prave (apstraktne) klasne hijerarhije *predviđene za nasleđivanje* je napušten. Vaše klasne hijerarhije, ako ih ima, treba da ostanu privatne unutar paketa gde su nastale, a svetu eksponirajte interfejse i (najbolje) statične metode koje na ovaj ili onaj način vraćaju tražene instance tih interfejsa. Dati nekome klasnu hijerarhiju za nasleđivanje je nepregledno i potencijalno opasno. A najčešće i nepotrebno, jer korisnik uvek može dobijene instance zamotati u svoje klase, dekorišući ih.
+Naravno, nigde ne treba biti potpuno isključiv: iako postoje alternativne tehnike, i u Javi ponekad valja praviti klasne hijerarhije da ne bi morali da duplirate sopstveni kod. Ipak, model u kojem se prave (apstraktne) klasne hijerarhije *predviđene za nasleđivanje* je napušten. Vaše klasne hijerarhije, ako ih ima, treba da ostanu privatne unutar paketa gde su nastale, a svetu eksponirajte interfejse i (najbolje) statične metode koje na ovaj ili onaj način vraćaju tražene instance tih interfejsa. Dati nekome klasnu hijerarhiju za nasleđivanje je nepregledno i potencijalno opasno. A najčešće i nepotrebno, jer korisnik uvek može dobijene instance zamotati u svoje klase, dekorišući ih.
 
 Elem, izgleda da su autori Go-a i ovo ispravno uočili, pa su iz svog jezika najurili klase. Time su interfejsi postali jedna od najvažnijih jezičkih konstrukcija u Go-u. Na primer, pored interfejsa izlistanog gore, uočite tip parametra `payload` iz metode `Store`:
 ```go
 	Store(payload interface{}) (token string, err error)
 ```
 
-Ovaj parametar je tipa `interface{}`. U Go-u, tip `interface{}` označava prazan (pra-)interfejs koji svaki tip promenljivih u Go-u implementira. Ovo važi za tipove koje sami deklarišete, ali i za tipove koji su deo jezika (*built-in*). One dve vitičaste zagrade jedna odmah iza druge označavaju "praznoću" interfejsa, to jest da ovaj interfejs nema metode (i u matematici se oznaka `{}` često koristi za prazan skup). Zbog praznoće ovog interfejsa, ispada da je svaka promenljiva tipa `interface{}` *assignment*-kompatibilna sa promenljivom bilo kog drugog tipa. Ovo je prosto zato što je tvrđenje **SVE implementira NIŠTA** jedna valjana formula, zar ne? E sad, pošto smo skapirali ovo, u Go-u je moguće pisati:
+Ovaj parametar je tipa `interface{}`. U Go-u, tip `interface{}` označava prazan (pra-)interfejs koji svaki tip promenljivih u Go-u implementira. Ovo važi za tipove koje sami deklarišete, ali i za tipove koji su deo jezika (*built-in*). One dve vitičaste zagrade jedna odmah iza druge označavaju praznoću interfejsa, to jest da ovaj interfejs nema metode (i u matematici se oznaka `{}` često koristi za prazan skup). Zbog praznoće ovog interfejsa, ispada da je svaka promenljiva tipa `interface{}` *assignment*-kompatibilna sa promenljivom bilo kog drugog tipa. Ovo je prosto zato što je tvrđenje **SVE implementira NIŠTA** jedna valjana formula, zar ne? E sad, pošto smo skapirali ovo, u Go-u je moguće pisati:
 ```go
 	var a int = 5
 	var b bool = true
@@ -67,11 +67,11 @@ Primetimo da su sve tri promenljive `x`, `y` i `z` istog tipa (`interface{}`), a
 
 ---
 
-Ovu dojajnost smo iskoristili u deklaraciji našeg interfejsa `Store`. Parametar i izlazna vrednost `payload` su namerno tipa `interface{}` baš zato što nas se nešto previše ne tiče **šta** nam je predato na čuvanje. U pravoj garderobi, nekad će to biti kaput, nekad jakna, a nekad će poneki πčor tamo ostaviti torbicu sa ... ajde da ne ulazimo u to šta ona sve tamo može da ima. Isto tako, ovaj interfejs i neku njegovu implementaciju možete koristiti za generisanje i čuvanje kukija u nekoj Web-aplikaciji, u kojoj će token biti vrednost kukija, a `payload` - status jedne sesije. U svakom slučaju, interfejs `Store` na ovaj način želi da se izjasni da ga boli uvo za prirodu objekta predatog mu na čuvanje, te da o tome treba da razmišlja vlasnik.
+Ovu dojajnost smo iskoristili u deklaraciji našeg interfejsa `Store`. Parametar i izlazna vrednost `payload` su namerno tipa `interface{}` baš zato što nas se nešto previše ne tiče **šta** nam je predato na čuvanje. U pravoj garderobi, nekad će to biti kaput, nekad jakna, a nekad će neki πčor tamo ostaviti torbicu sa ... ajde da ne ulazimo u to šta ona sve tamo može da ima. Isto tako, ovaj interfejs i neku njegovu implementaciju možete koristiti za generisanje i čuvanje kukija u nekoj Web-aplikaciji, u kojoj će token biti vrednost kukija, a `payload` - status jedne sesije. U svakom slučaju, interfejs `Store` na ovaj način želi kaže da ga boli uvo za prirodu objekata predatih mu na čuvanje, te da o tome treba da razmišljaju vlasnici.
 
 ### Prvi pitonizam: višestruke povratne vrednosti iz funkcija
 
-Eto polako dođosmo i do metoda gorenavedenog interfejsa. Primetite da one, sudeći po potpisu, trebaju da vrate dve stvari, a ne samo jednu:
+Eto polako dođosmo i do metoda gorenavedenog interfejsa. Sudeći po potpisu, one trebaju da vrate dve stvari, a ne samo jednu:
 
 ```go
 	Store(payload interface{}) (token string, err error)
@@ -80,7 +80,7 @@ Eto polako dođosmo i do metoda gorenavedenog interfejsa. Primetite da one, sude
 
 Ako me naterate da izdvojim nešto što mi je sve ove godine najviše išlo na onu stvar u Javi, odlučio bih se za to da Javine metode mogu da vrate samo jednu stvar. A ako vam zatreba više stvari, snalazite se kako znate. Ovo se svodi na uvođenje suštinski nepotrebnih Javinih klasa samo zato da bi u njih spakovali tih više stvari. U tu svrhu, već duže koristim `org.apache.commons.lang3.tuple.Pair<L, R>` koji mi, eto, dozvoljava da u povratnu vrednost spakujem dve stvari. A kad mi zatreba treća, dolazi do rađanja mečke :rage:
 
-U Go-u je prirodno da funkcija može da vrati više stvari odjednom; ovo je možda najpoznatiji idiom jezika. U našem slučaju, metoda `Store` vraća token i eventualnu grešku (`nil` ako nema greške), a metoda `Fetch` - payload i grešku. Primetite da smo povratne vrednosti u ovim metodama krstili nekakvim imenima, jer je u Go-u ovo moguće. Iako nije obavezno, ovo zna da bude jako korisno, čitljivosti radi, a to naročito važi za interfejse čiji pisac već u toku pisanja ima priliku da podari povratnim vrednostima svojih metoda nekakvu semantiku. Ovo će sigurno radovati čitaoce.
+U Go-u je prirodno da funkcija može da vrati više stvari odjednom; ovo je možda najpoznatiji idiom jezika. U našem slučaju, metoda `Store` vraća token i eventualnu grešku (`nil` ako nema greške), a metoda `Fetch` - payload i grešku. Primetite da smo povratne vrednosti u ovim metodama krstili nekakvim imenima, jer je u Go-u ovo moguće. Iako nije obavezno, ovo zna da bude korisno, a to naročito važi za interfejse čiji pisac već u toku pisanja ima priliku da podari povratnim vrednostima svojih metoda nekakvu semantiku. Ovo će sigurno radovati čitaoce.
 
 ---
 
@@ -100,7 +100,7 @@ Sa stanovišta pozivača ovih metoda, ovaj tango izgleda nekako ovako, pod uslov
 		// kuknjava zbog razlike
 	}
 ```
-Primetite konstrukciju `token, err := store.Store(something)`, a naročito operator dodeljivanja u njoj (`:=`). On se razlikuje od operatora dodeljivanja koji smo već koristili. Go je veoma strog jezik što se tiče tipova, ali kompajler je jedan kul lik koji podstiče programere na lenjost. U Go-u, postoji više načina da deklarišemo promenljivu `something` i dodelimo joj vrednost:
+Primetite konstrukciju `token, err := store.Store(something)`, a naročito operator dodeljivanja u njoj (`:=`). On se razlikuje od operatora dodeljivanja koji smo koristili u primeru pre ovog. Go je veoma strog jezik što se tiče tipova, ali kompajler je jedan kul lik koji podstiče programere na lenjost. U Go-u, postoji više načina da deklarišemo promenljivu `something` i dodelimo joj vrednost:
 ```go
 	// vredan programer
 	var something string
@@ -165,12 +165,14 @@ Koliko je Go neposredan u svim pogledima, govori i ovo. Ako želite da baš **ov
     import "github.com/gordost/ogou"
 ```
 
+Baš zgodno, zar ne?
+
 ---
 
 ```go
 const tokenLength = 5
 ```
-Da ne žvalavimo previše, ovako se u Go-u definišu konstante. Za standardnu dužinu tokena odabrali smo 5, jer nam treba nešto kratko da nam je golim okom čitljivo, ali ne i prekratko, da bi broj mogućih tokena bio dovoljno veliki. Kod nas je ovaj broj 62 na peti stepen, što je jednako 916 132 832. Znači šanse da neko iz dupeta izvuče važeći token su male.
+Da ne žvalavimo previše, ovako se u Go-u definišu konstante. Za standardnu dužinu tokena odabrali smo 5, jer nam treba nešto kratko da nam je golim okom čitljivo, ali ne i prekratko, da bi broj mogućih tokena bio dovoljno veliki. Kod nas je ovaj broj, videćemo, 62 na peti stepen, što je jednako 916 132 832. Znači šanse da neko iz dupeta izvuče važeći token su male.
 
 ---
 
@@ -194,13 +196,11 @@ Ili malkice kraće, jer se tip ovde može izostaviti:
 var tokenLetters = [62]byte('a','b','c','d','e' ... ,'9') 
 ```
 
-###### Kriške (slices)
-
-Nizovi u Go-u su kao nizovi u svim drugim jezicima. Oni imaju određenu (unapred deklarisanu) dužinu, i sadrže elemente istog tipa. U prethodna dva primera smo deklarisali niz od 62 `byte`-elementa, a onda smo ga napunili `byte`-ovima već u deklaraciji. U pred-pred-prethodnom primeru smo učinili skoro istu stvar, samo što smo tada bili malkice lenji, pa smo samo konvertovali onaj string-literal (ili *bukval*, kako ovo prevesti, jebemliga?) u seriju bajtova, da ne bi morali ručno da ih brojimo i da tako dođemo do broja 62. 
+Nizovi u Go-u su kao nizovi u svim drugim jezicima. Oni imaju određenu (unapred deklarisanu) dužinu, i sadrže elemente istog tipa. U prethodna dva primera smo deklarisali niz od 62 `byte`-elementa, a onda smo ga napunili `byte`-ovima već u deklaraciji. U primeru pre poslednja dva smo učinili skoro istu stvar, samo što smo tada bili malkice lenji, pa smo samo konvertovali onaj string-literal (ili *bukval*, kako ovo prevesti, jebemliga?) u seriju bajtova, da ne bi morali ručno da ih brojimo i da tako dođemo do broja 62. 
 
 E sad, zbog unapred određene dužine, nizovi u svim jezicima su teški kao slonovi. Zamislite da vam u jednom trenutku zatreba podniz (koji je isto tako, tipski gledano, niz) koji obuhvata sve od 5-tog do 55-tog elementa onog niza gore. Ako bi u jeziku imali isključivo nizove, za taj podniz morali bi alocirati novi niz od 50 elemenata i kopirati potreban sadržaj, da bi tako dobili traženu strukturu. E sad, nagradno pitanje: ne bi li bilo zgodno ako taj novi niz ne bi morali niti alocirati, niti kopirati, nego ga samo nekako prišljamčiti uz onaj stari, da ga yebem kako, ali ako znamo da je sve što nam je potrebno **već** tamo, to bi valjda trebalo biti moguće, zar ne?
 
-Ovde na scenu uskaču kriške (slices). Slajs je prozor kroz koji gledamo niz koji se nalazi u pozadini slajsa. Kroz taj prozor možemo da vidimo ceo niz, a možemo i samo parče (krišku). Stvar je u tome što svaki slajs mora u pozadini imati jedan pravi niz, i taj niz ćemo ovde zvati *niz-pozadinac*. Zbog ove osobine, slajsovi imaju lakašnu strukturu: jedan pokazivač na niz-pozadinca, plus informaciju o lokaciji i veličini prozora. Zbog toga su sve operacije sa slajsovima brze k'o guja. Na primer, za niz `tokenLetters`, slajs koji se sastoji od 5-tog do 55-tog elementa tog niza, a bez ikakvog tumbanja memorije, dobijamo ovako:
+Ovde na scenu uskaču kriške (slices). Slajs je prozor kroz koji gledamo niz koji se nalazi u pozadini slajsa. Kroz taj prozor možemo da vidimo ceo niz, a možemo i samo parče (krišku). Stvar je u tome što svaki slajs mora u pozadini imati jedan pravi niz, i taj niz ćemo ovde zvati *niz-pozadinac*. Zbog ove osobine, slajsovi imaju lakašnu strukturu: jedan pokazivač na niz-pozadinca, plus informaciju o lokaciji i veličini prozora. Zbog toga su sve operacije sa slajsovima brze k'o zmija. Na primer, za niz `tokenLetters`, slajs koji se sastoji od 5-tog do 55-tog elementa tog niza, a bez ikakvog tumbanja memorije, dobijamo ovako:
 
 ```go
 	s := tokenLetters[5:56] // 56-ti nije uključen
@@ -208,7 +208,7 @@ Ovde na scenu uskaču kriške (slices). Slajs je prozor kroz koji gledamo niz ko
 
 ---
 
-Konstruišimo sada jedan pravi niz, da imamo šta da drndamo u primerima, ali koji neće biti predugačak, zbog ispisa:
+Konstruišimo sada jedan pravi niz, da imamo šta da drndamo po primerima, ali koji neće biti predugačak, zbog ispisa:
 
 ```go
     var a = [10]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9} 
@@ -222,7 +222,7 @@ Za slajsove (pa i nizove, koji su sintaktički skoro isto), naročito su važne 
 ```
     10 10
 ```
-Ovo `a` je sada bio pravi niz, a ne slajs. Ponekad to nije lako videti. Stvarno, kako prepoznati razliku? Odmah da kažem da je pitanje na mestu: u Go-u, nizovi i slajsovi se sa stanovišta rada sa njima sasvim malo razlikuju. Ipak, da bi serija nečega bila niz (a ne slajs), potrebno je da joj se u onim uglastim zagradama deklaracije nađe konkretna informacija o tome koliko toga nečega ima, kao što je slučaj sa `[10]int`. Čim tu informaciju izostavite, i upotrebite prazne uglaste zagrade, kao `[]int`, na ovaj ili onaj način dobili ste slajs. Ovo je razlog što je `var tokenLetters = []byte("abc..")` bio slajs.
+Ovo `a` je sada bio pravi niz, a ne slajs. Ponekad to nije lako videti. Stvarno, kako prepoznati razliku? Odmah da kažem da je pitanje na mestu: u Go-u, nizovi i slajsovi se sa stanovišta rada sa njima sasvim malo razlikuju. Ipak, da bi serija nečega bila niz (a ne slajs), potrebno je da joj se u onim uglastim zagradama pri deklaraciji nađe konkretna informacija o tome koliko toga nečega ima, kao što je slučaj sa `[10]int`. Čim tu informaciju izostavite, i upotrebite prazne uglaste zagrade, kao `[]int`, na ovaj ili onaj način dobili ste slajs. Ovo je razlog što je `var tokenLetters = []byte("abc..")` bio slajs.
 
 Izvucimo sada iz niza `a` slajs koji "posmatra" prvih pet članova tog niza, i odštampajmo mu `len()` i `cap()`
 ```go
@@ -232,9 +232,9 @@ Izvucimo sada iz niza `a` slajs koji "posmatra" prvih pet članova tog niza, i o
 ```
     [0 1 2 3 4] 5 10
 ```
-Sintaksa je kao u Pitonu. Prazno mesto ispred dvotačke znači od početka, broj 5 iza dvotačke znači 5 komada od početka niza. Slično, `a[:]` bi bio slajs koji posmatra ceo niz, a `a[5:]` bi bio slajs koji posmatra podniz of 5-tog elementa do kraja niza. Za razliku od Pitona, Go ne trpi negativne brojeve u indeksiranju slajsova, ali dobro.
+Sintaksa je kao u Pitonu. Prazno mesto ispred dvotačke znači od početka, broj 5 iza dvotačke znači do 5-tog elementa isključeno, ili do 4-tog uključeno. Slično, `a[:]` bi bio slajs koji posmatra ceo niz, a `a[5:]` bi bio slajs koji posmatra podniz of 5-tog elementa do kraja niza. Za razliku od Pitona, Go ne trpi negativne brojeve u indeksiranju slajsova, ali dobro.
 
-Na osnovu `cap()`-a (koji je ovde 10), vidimo da je Go ispravno zaključio da je niz-pozadinac ovog novog slajsa naš očenj poznati niz `a`. Ovo je jasno jer smo baš iz njega "izvukli" elemente za `s`. To ujedno znači da `s`, iako ima dužinu 5, ima prostor da širi svoj prozor sve do 10. Proverimo ovo jednom malkice perverznom naredbom kojom ćemo od slajsa `s` zatražiti nešto što ovaj na prvi pogled nema:
+Na osnovu `cap()`-a (koji je ovde 10), vidimo da je Go ispravno zaključio da je niz-pozadinac ovog slajsa naš očenj poznati niz `a`. Ovo je jasno jer smo baš iz njega izvukli elemente za `s`. To ujedno znači da `s`, iako ima dužinu 5, ima prostor da širi svoj prozor sve do 10. Proverimo ovo jednom malkice perverznom naredbom kojom ćemo od slajsa `s` zatražiti nešto što ovaj na prvi pogled nema:
 ```go
     s2 := s[3:7]
     fmt.Println(s2, len(s2), cap(s2))
@@ -242,7 +242,7 @@ Na osnovu `cap()`-a (koji je ovde 10), vidimo da je Go ispravno zaključio da je
 ```
     [3 4 5 6] 4 7
 ```
-Ispada da je `s` odnekle izvukao nešto što naizgled nema, sudeći prema ispisu gore. Ali ovo uparvo znači da je slajs `s` zaista samo prozor kroz koji se posmatra niz-pozadinac `a`, i da je rastegljiv do kapaciteta potonjeg. Potvrdimo ovo tako što ćemo izmeniti nešto u slajsu `s`, pa proveriti da li je ta izmena imala efekat na niz-pozadinca, ali i na slajs `s2`, jer je i on baziran na istom:
+Ispada da je `s` odnekle izvukao nešto što naizgled nema, sudeći prema ispisu gore. Ali ovo upravo znači da je slajs `s` zaista samo prozor kroz koji se posmatra niz-pozadinac `a`, i da je rastegljiv do kapaciteta potonjeg. Potvrdimo ovo tako što ćemo izmeniti nešto u slajsu `s`, pa proveriti da li je ta izmena imala efekat na niz-pozadinca `a`, ali isto tako i na slajs `s2`, jer je i taj slajs baziran na `a`:
 ```go
     s[3] = 3000
     fmt.Println(a) 
@@ -252,7 +252,7 @@ Ispada da je `s` odnekle izvukao nešto što naizgled nema, sudeći prema ispisu
     [0 1 2 3000 4 5 6 7 8 9]
     [3000 4 5 6]
 ```
-Ispada da jeste. Zapamtite: kad god menjate nešto u slajsu, Go će pokušati da za to drnda niz-pozadinca. A ako zbog nečeg to ne može (uglavnom zbog kapaciteta pozadinca), Go će naći novog mršu za drndanje. Proverimo ovo u dva koraka.
+Ispada da jeste. Zapamtite: kad god menjate nešto u slajsu, Go će pokušati da ga zavuče niz-pozadincu. A ako zbog nečeg to ne može (uglavnom zbog kapaciteta pozadinca), Go će naći novog mršu za zavlačenje. Proverimo ovo u dva koraka.
 
 Videli smo da slajs `s` trenutno sadrži `[0 1 2 3000 4]`. Kreirajmo novi slajs `x` dodavši na `s` tačno 5 novih elemenata, i pogledajmo kako je to uticalo na niz-pozadinca:
 ```go
@@ -275,7 +275,7 @@ Slajs `s` je ostao isti kao što je bio, jer operacija `append()` ne mutira `s`.
     10 10
 ```
 
-A sad, prc: izvucimo novi slajs `y` dodavanjem još jednog elementa na `x`. Očekujemo da Go više neće biti u stanju da drnda starog niz-pozadinca za potrebe slajsa `y`, jer ovaj više nema za to potreban kapacitet, i da će biti prinuđen izmisliti novog niz-pozadinca, da bi na njemu temeljio `y`:
+A sad, prc: izvucimo novi slajs `y` dodavanjem još jednog elementa na `x`. Očekujemo da Go više neće biti u stanju da ga zavlači starom niz-pozadincu za potrebe slajsa `y`, jer ovaj više nema za to potreban kapacitet, i da će biti prinuđen izmisliti novog niz-pozadinca, da bi na njemu temeljio `y`:
 ```go
     y := append(x, 10000)
     fmt.Println(y) 
@@ -310,7 +310,7 @@ Primetimo sada nešto malkice čudnjikavo. Ako bi sada najednom odštampali `len
 ```
 Au, bre, kako sad pa to? Dobro, 'ajde, razumemo da je `len(y)` sada 11. Na kraju krajeva, `len(y)` smo dobili tako što smo na slajs dužine 10 dodali još jedan element. Ali otkud sad ovo 20? :confused: 
 
-Stvar je u tome što je izmišljanje novog mrše za drndanje jedna skupa operacija koja iziskuje kopiranje starih elemenata, pa Go pokušava da joj spusti cenu. Go razmišlja nekako ovako: *aha, sada mi treba mrša dužine 11, ali šta ako ovaj tenkre malo kasnije doda još nešto, pa mi zatreba 12? Hmmm... 'ajde zato da ja odmah sada, dok sam tu, sklepam mršu duplog kapaciteta u odnosu na onog starog, jer me to manje košta nego da svaki čas izmišljam novog kad god ova budala doda jedan element*.
+Stvar je u tome što je izmišljanje novog mrše za mrčenje jedna skupa operacija koja iziskuje kopiranje starih elemenata, pa Go pokušava da joj spusti cenu. Go razmišlja nekako ovako: *aha, sada mi treba mrša dužine 11, ali šta ako ovaj tenkre malo kasnije doda još nešto, pa mi zatreba 12? Hmmm... 'ajde zato da ja odmah sada, dok sam tu, sklepam mršu duplog kapaciteta u odnosu na onog starog, jer me to manje košta nego da svaki čas izmišljam novog kad god ova budala doda jedan element*.
 
 Drugim rečima, Go na ovaj način nalazi dovoljan kapacitet za rad vaših slajseva eksponencijalnom brzinom, što je uglavnom zadovoljavajuće.
 
@@ -331,15 +331,15 @@ Ovo prosto znači da `random()` ne prima nikakve parametre, a vraća string i gr
 ```
 Ovde kreiramo slajs bajtova dužine `tokenLength`, koji će Go inicijalno uvek nafilovati nulama. 
 
-Funkcija `make()` je specijalna funkcija standardne biblioteke koja zna da kreira samo 3 stvari: mape, kanale i slajsove. Ako bacimo pogled na njenu deklaraciju, naletećemo na ovo:
+Funkcija `make()` je specijalna funkcija standardne biblioteke koja zna da pravi samo 3 stvari: mape, kanale i slajsove. Ako bacimo pogled na njenu deklaraciju, naletećemo na ovo:
 ```go
     func make(t Type, size ...IntegerType) Type
 ```
-Ovo znači da se prvi parametar ove funkcije referiše na željeni tip (za koji moramo biti sigurni da `make()` zna da ga napravi). Kod nas je to slajs bajtova(`[]byte`). Drugi (i eventualno treći) parametar govore o veličini toga što želimo da `make()` napravi. Luk i voda, zar ne?
+Ovo znači da prvi parametar ove funkcije prenosi željeni tip za koji moramo biti sigurni da `make()` zna da ga napravi. Kod nas je to slajs bajtova(`[]byte`). Drugi (i eventualno treći) parametar govore o veličini toga što želimo da se napravi. Luk i voda, zar ne?
 
 Neko će sada reći: alo, bre, a zašto sada izmišljamo toplu vodu, a ne koristimo istu konstrukciju kao onda kada smo deklarisali promenljivu `tokenLetters`? I onda smo dobili nekakav slajs, zar ne?
 
-Stvar je u tome što to sada nije praktično jer ne znamo unapred čime ćemo ovaj slajs puniti, a onda smo znali (`abcdefg......0123456789`). Sve što znamo je da `buf` želimo puniti nekakvim slučajnim brojevima, a ovo ni u ludilu ne može biti unapred.
+Stvar je u tome što to sada nije baš praktično jer ne znamo unapred čime ćemo ovaj slajs puniti, a onda smo znali (`abcdefg......0123456789`). Sve što znamo je da `buf` želimo puniti nekakvim slučajnim brojevima, a ovo ni u ludilu ne može biti unapred.
 
 ---
 
@@ -347,7 +347,7 @@ O nizovima i slajsovima može još mnogo da se priča, ali vreme je da krenemo d
 ```go
 	_, err := rand.Read(buf)
 ```
-E ovu liniju valja zaliti, jer je ovo prva linija do sada koja stvarno nešto radi. :beer: 
+E ovu liniju valja zaliti, jer je ovo prva linija do sada koja stvarno nešto radi :beer: 
 
 Paket `crypto/rand` nam donosi funkciju `rand.Read()` koja ima sledeći potpis:
 ```go
@@ -357,16 +357,16 @@ Potpis nam govori da mi funkciji treba da pošaljemo nekakav slajs bajtova, a `r
 
 *On return, n == len(b) if and only if err == nil.* 
 
-Ovaj komentar za nas ima praktično značenje jer nam je nacrtao crno na belo kako da koristimo funkciju. Kako izlazne vrednosti direktno zavise jedna od druge, ovo znači da nam ne trebaju obe, nego samo jedna od njih. Opredelili smo se da to bude `error`, jer nam broj bajtova nije interesantan. Jer ako do greške dođe, broj bajtova nas se neće ticati (delimično napunjen bafer ionako ne možemo da iskoristimo). A ako do greške ne dođe, tada će broj bajtova, sudeći po komentaru autora, ionako biti jednak dužini bafera. Primetite podvlačilicu sa leve strane naredbe dodeljivanja; njom dajemo signal da smo odlučili da prvu izlaznu vrednost funkcije ignorišemo. A što se tiče druge, nju želimo da je Go sačuva u promenljivoj koju smo krstili `err`.
+Ovaj komentar za nas ima praktično značenje jer nam crta crno na belo kako da koristimo funkciju. Kako izlazne vrednosti direktno zavise jedna od druge, ovo znači da nam ne trebaju obe, nego samo jedna od njih. Opredelili smo se da to bude `error`, jer nam broj bajtova nije interesantan. Ako do greške dođe, broj bajtova nas se neće ticati (delimično napunjen bafer ionako ne možemo iskoristiti). A ako do greške ne dođe, tada će broj bajtova, sudeći po komentaru autora, ionako biti jednak dužini bafera, pa nas baš briga. Primetite podvlačilicu sa leve strane naredbe dodeljivanja; njom dajemo signal da smo odlučili da prvu izlaznu vrednost funkcije ignorišemo. A što se tiče druge, nju želimo da je Go sačuva u promenljivoj koju smo krstili `err`.
 
-Postoji još jedan principijelan razlog zbog kojeg smo se opredelili da ne ignorišemo grešku (`error`): **nikada ne ignorišite greške**! U suprotnom, to će vam se kad-tad obiti o glavu. Zamislite da smo recimo (pogrešno) zaključili da `rand.Read()` nikada neće vratiti grešku, te da smo kod napisali tako što smo ignorisali obe izlazne vrednosti:
+Postoji još jedan (principijelan) razlog zbog kojeg smo se opredelili da ne ignorišemo grešku: **nikada ne ignorišite greške**! U suprotnom, to će vam se kad-tad obiti o glavu. Zamislite da smo recimo (pogrešno) zaključili da `rand.Read()` nikada neće vratiti grešku, te da smo kod napisali tako što smo ignorisali obe izlazne vrednosti funkcije `rand.Read()`:
 ```go
 	_, _ = rand.Read(buf)
 	for i := 0; i < tokenLength; i++ {
 		...
 	}
 ```
-Naš bafer će svejedno biti napunjen... *most of the time*, ali ovo je totalno pogrešno. Prvo i prvo, pa valjda onaj ko je pisao `rand.Read()` zna bolje od nas da li ovde može ili ne može da dođe do greške. I ukoliko stvarno ne bi moglo, onda bi potpis njegove funkcije sigurno izgledao drugačije. Zato ako zaista odlučimo da ne ispoštujemo potpis, a do greške jednog dana ipak dođe, program će naizgled nastaviti da radi bez greške, samo što će nam se svi tokeni kod kojih se desila ova greška početi da se završavaju na **a**. U stvari, najveće su šanse da će svi tokeni postati jedno dugačko i tužno **aaaaa**.
+Naš bafer će svejedno biti napunjen... uglavnom, ali ovo je totalno pogrešno. Prvo i prvo, pa valjda onaj ko je pisao `rand.Read()` zna bolje od nas da li ovde može ili ne može da dođe do greške? I ukoliko stvarno ne bi moglo, onda bi potpis njegove funkcije sigurno izgledao drukčije. Zato ako ne ispoštujemo potpis, a do greške jednog dana ipak dođe, program će naizgled nastaviti da radi bez greške, samo što će nam se svi tokeni kod kojih se desila ova greška početi da se završavaju na **a**. U stvari, najveće su šanse da će svi tokeni postati jedno dugačko i tužno **aaaaa**.
 
 ---
 
