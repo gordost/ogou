@@ -115,29 +115,29 @@ func TestTokenStoreConcurrency(t *testing.T) {
 func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
 	store := NewTokenStore(ttl, initialCapacity)
 	mem, _ := store.(*TokenStore)
-	testArr := make([]string, volume)
-	var err error
-	for i := 0; i < volume; i++ {
-		testArr[i], err = random()
-		if err != nil {
-			t.Fatalf("unexpected error: %v", err)
-		}
-	}
 	var wg sync.WaitGroup
-	storeWrapper := func(wg *sync.WaitGroup, key string) {
+	storeWrapper := func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		store.Store(key)
+		random, err := random()
+		if err != nil {
+			t.Fatal(err)
+		}
+		store.Store(random)
 	}
-	fetchWrapper := func(wg *sync.WaitGroup, key string) {
+	fetchWrapper := func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		store.Fetch(key)
+		random, err := random()
+		if err != nil {
+			t.Fatal(err)
+		}
+		store.Fetch(random)
 	}
 	start := time.Now()
 	for i := 0; i < volume; i++ {
 		wg.Add(1)
-		go storeWrapper(&wg, testArr[i])
+		go storeWrapper(&wg)
 		wg.Add(1)
-		go fetchWrapper(&wg, testArr[i])
+		go fetchWrapper(&wg)
 	}
 	ok := isDoneWithinTimeout(&wg, ttl)
 	if !ok {

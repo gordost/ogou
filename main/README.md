@@ -22,7 +22,7 @@ U direktorijumu će se pojaviti izvršni program koji se zove `tokenplayground`.
     [1] 51784
 ```
 
-- Koristite komandu `curl` da se igrate.
+- Koristite komandu `curl` da za igranje.
     - Kreira novi token
         ```shell
             $ curl -X PUT localhost:8080?payload=AloBre`
