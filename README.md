@@ -1,10 +1,8 @@
-# S' Jave na Go: kraš-kurs iz Go-a jednog kivnog Javašlučara
+# S' Jave na Go: kraš-kurs iz Go-a jednog bivšeg Javašlučara
 
 Evo već mesečak dana pišem isključivo u Go-u, pa reko' da promuhabetim nešto na tu temu. Zato odmah da se izlajem: ako me išta bude nateralo da se vratim Javi, smatraću to korakom unazad. Go je mladić koji zna da poleti u sprint kad zatreba, a Java ćelavi debeljko koji se jedva vuče, premda hrabro gura kada se jednom zalaufa. 
 
-Java se izvršava na virtualnoj mašini, pa prvo što treba da uradite da bi se vaš program izvršavao je da instalirate Javašluk. Kontrasta radi, Go se kompajlira u izvršni kod mašine na kojoj ste, pa se vaš program odmah izvršava. Javini frejmvorkovi,iako strogo gledano nisu deo jezika, nekako su postali njegov nezaobilazni deo, a to usporava programe na startu. Kontrasta radi, Gopheri preziru frejmvorkove: oni žele kôd koji je što bliže Zemlji, i koji golim rukama radi posao koji treba da radi, bez frejmvorkovskih rukavica. Java je vremenom postala previše apstraktna, i njen kod nije više lako razumeti, što važi i za iskusne programere. Na drugu stranu, Go je mnogo neposredniji i konkretan, a kod je svima lakši za čitanje. I na kraju, Java već duže pokazuje znakove zastarevanja, dok je Go mlad i dobro osmišljen jezik koji će tek da se razvija. 
-
-Minimalizam Go-a u svim pogledima je razlog što je Go eksplodirao u Docker-kontejnerima i primerice Lambda-servisima na AWS-u... munjevito se startuje, i odmah krene da radi svoj pos'o.
+Java se izvršava na virtualnoj mašini, pa prvo što treba da uradite da bi se vaš program izvršavao je da instalirate Javašluk. Kontrasta radi, Go se kompajlira u izvršni kod mašine na kojoj ste, pa se vaš program odmah izvršava. Javini frejmvorkovi, iako strogo gledano nisu deo jezika, nekako su postali njegov nezaobilazni deo, a to usporava programe na startu. Kontrasta radi, Gopheri preziru frejmvorkove: oni žele kôd koji je što bliže Zemlji, i koji golim rukama radi posao koji treba da radi, bez frejmvorkovskih rukavica. Java je vremenom postala previše apstraktna, i njen kod nije više lako razumeti, što važi i za iskusne programere. Na drugu stranu, Go je mnogo neposredniji i konkretan, a kod je svima lakši za čitanje. I na kraju, Java već duže pokazuje znakove jezičkog zastarevanja, dok je Go mlad i dobro osmišljen jezik koji će tek da se razvija. Minimalizam Go-a u svim pogledima je razlog što je Go eksplodirao u Docker-kontejnerima i primerice Lambda-servisima na AWS-u... munjevito se startuje, i odmah krene da radi svoj pos'o.
 
 Pošto me mrzi da izmišljam brdo usiljenih primera, a ipak želim da ilustrujem jezik, stil i naročito lakoću paralelnog programiranja u Go-u, diseciraćemo ovde “algoritamčič” koji mi je nedavno trebao, a koji sam malkice izmenio za potrebe ovog pisanija. Ovo u nadi da će vam se Go dopasti kad završite čitanje. Na poređenja sa Javašlukom (kao i na prednosti Go-a u odnosu na Javašluk) nabasaćete u toku čitanja :smiley:
 
@@ -36,7 +34,9 @@ U Go-u, biblioteke se zovu paketi (`package`), tako da ova naredba daje našem p
 
 Primetite upotrebu VELIKIH slova u deklaraciji interfejsa `Store` i njegovih metoda. Ovo nije bezveze. Ako nešto (šta god) u datom paketu počinje velikim slovom, onda je to "nešto" vidljivo i iz drugih paketa. U Javašluku za to služi modifikator `public`, ali je meni ova ekonomičnost Go-a toliko seksi da nemam reči. Kad se samo setim metričke tonaže modifikatora `public` i `private` u Javinim programima, padne mi mrak na oči, dok je u Go-u ovo mrak rešeno. Ako želite da vam u paketu nešto ostane privatno, koristite malo slovo. U suprotnom, koristite veliko. Kraj priče.
 
-Kad smo već kod toga: ja nikad nisam istinski razumeo svrhu Javinog `private` modifikatora. Stvar je u tome što je u Javi nešto *public* ako upotrebite modifikator `public` u deklaraciji tog nečeg, a *private* ako upotrebite - `private`. Ali stvar se ovde ne završava. U Javi, nešto može da bude i `/*package private*/`. Iako za ovo ne postoji službena reč (nego samo komentar; mnogi javašlučari smatraju da za ovo treba da se uvede službena reč), u Javi je nešto `/*package private*/` ukoliko ne upotrebite nijedan od ona dva gorespomenuta modifikatora. U tom slučaju, to "nešto" će biti vidljivo unutar svog paketa, dok za sve druge pakete - neće! E sad: razumem to za`public`... razumem i to za `/*package private*/`, jer nam vidljivost unutar istog paketa treba... ali ne razumem koji će nam qrac `private`? Pa koji to imbecil želi nešto da krije od samog sebe? U Go-u je ovo ispravno rešeno tako što nešto počinje ili velikim ili malim slovom, i ćao zdravo!
+Kad smo već kod toga: ja nikad nisam istinski razumeo svrhu Javinog `private` modifikatora. Stvar je u tome što je u Javi nešto *public* ako upotrebite modifikator `public` u deklaraciji tog nečeg, a *private* ako upotrebite - `private`. Ali stvar se ovde ne završava. U Javi, nešto može da bude i `/*package private*/`. Iako za ovo ne postoji službena reč (nego samo komentar; mnogi javašlučari smatraju da za ovo treba da se uvede službena reč), u Javi je nešto `/*package private*/` ukoliko ne upotrebite nijedan od ona dva gorespomenuta modifikatora. U tom slučaju, to "nešto" će biti vidljivo unutar svog paketa, dok za sve druge pakete - neće! 
+
+E sad: razumem to za`public`... razumem i to za `/*package private*/`, jer nam vidljivost unutar istog paketa treba... ali ne razumem koji će nam q `private`? Pa koji to imbecil želi nešto da krije od samog sebe? U Go-u je ovo ispravno rešeno tako što nešto počinje ili velikim ili malim slovom, i ćao zdravo!
 
 ### Interfejsi
 ```go
@@ -44,9 +44,9 @@ type Store interface {...}
 ```
 Za gujone, interfejs je obećanje koje ispunjava onaj ko ga implementira (to jest onaj ko implementira sve metode navedene u njemu). Go, za razliku od Jave, nema klase, ali, eto, ima interfejse. Interfejsi su razlog što ni u jednom trenutku nisam doživeo besklasnost Go-a kao falinku. Evo već skoro dve decenije koristim Javu koja ne samo da ima klase, nego bre u Javi ne možete da napišete ni redak korisnog koda van konteksta neke klase. Ipak, poslednjih godina sam često uhvatio sebe da se pitam koji će mi Javine klase? Već duže pišem kod ravnajući se prema interfejsima, a klase, za koje me najčešće boli ona stvar, uglavnom koristim samo zato što je to u Javi moranje. Nasleđivanje sam odavno prestao da koristim (osim, naravno, ako se ne radi o nasleđivanju interfejsa), a omiljeni štos mi je anonimna implementacija interfejsa. U Javi, ovo je jedini način da izbegnete eksplicitnu deklariciju klase koja vam u stvari ne treba, pa valjda zato.
 
-Naravno, nigde ne treba biti potpuno isključiv: iako postoje alternativne tehnike, i u Javi ponekad valja praviti klasne hijerarhije da ne bi morali da duplirate sopstveni kod. Ipak, model u kojem se prave (apstraktne) klasne hijerarhije *predviđene za nasleđivanje* je napušten. Vaše klasne hijerarhije, ako ih ima, treba da ostanu privatne unutar paketa gde su nastale, a svetu eksponirajte interfejse i (najbolje) statične metode koje na ovaj ili onaj način vraćaju tražene instance tih interfejsa. Dati nekome klasnu hijerarhiju za nasleđivanje je nepregledno i potencijalno opasno. A najčešće i nepotrebno, jer korisnik uvek može dobijene instance zamotati u svoje klase, dekorišući ih.
+Naravno, nigde ne treba biti potpuno isključiv: iako postoje alternativne tehnike, i u Javi ponekad valja praviti klasne hijerarhije da ne bi morali da duplirate sopstveni kod. Ipak, model u kojem se pišu (apstraktne) klasne hijerarhije *predviđene za nasleđivanje* je napušten. Vaše klasne hijerarhije, ako ih ima, treba da ostanu privatne unutar paketa gde su nastale, a svetu eksponirajte interfejse i (najbolje) statične metode koje na ovaj ili onaj način vraćaju tražene instance tih interfejsa. Dati nekome klasnu hijerarhiju za nasleđivanje je nepregledno i potencijalno opasno. A najčešće i nepotrebno, jer korisnik uvek može dobijene instance zamotati u svoje klase, dekorišući ih.
 
-Elem, izgleda da su autori Go-a i ovo ispravno uočili, pa su iz svog jezika najurili klase. Time su interfejsi postali jedna od najvažnijih jezičkih konstrukcija u Go-u. Na primer, pored interfejsa izlistanog gore, uočite tip parametra `payload` iz metode `Store`:
+Elem, izgleda da su autori Go-a i ovo ispravno uočili, pa su iz svog jezika najurili klase. Time su interfejsi postali jedna od najvažnijih jezičkih konstrukcija Go-a. Na primer, pored interfejsa izlistanog gore, uočite tip parametra `payload` iz metode `Store`:
 ```go
 	Store(payload interface{}) (token string, err error)
 ```
@@ -69,7 +69,7 @@ Primetimo da su sve tri promenljive `x`, `y` i `z` istog tipa (`interface{}`), a
 
 ---
 
-Ovu dojajnost smo iskoristili u deklaraciji našeg interfejsa `Store`. Parametar i izlazna vrednost `payload` su namerno tipa `interface{}` baš zato što nas se nešto previše ne tiče **šta** nam je predato na čuvanje. U pravoj garderobi, nekad će to biti kaput, nekad jakna, a nekad će neki πčor tamo ostaviti torbicu sa ... ajde da ne ulazimo u to šta ona sve tamo može da ima. Isto tako, ovaj interfejs i neku njegovu implementaciju možete koristiti za generisanje i čuvanje kukija u nekoj Web-aplikaciji, u kojoj će token biti vrednost kukija, a `payload` - status jedne sesije. U svakom slučaju, interfejs `Store` na ovaj način želi kaže da ga boli uvo za prirodu objekata predatih mu na čuvanje, te da o tome treba da razmišljaju vlasnici.
+Ovu dojajnost smo iskoristili u deklaraciji našeg interfejsa `Store`. Parametar i izlazna vrednost `payload` su namerno tipa `interface{}` baš zato što nas se nešto previše ne tiče **šta** nam je predato na čuvanje. U pravoj garderobi, nekad će to biti kaput, nekad jakna, a nekad će neki πčor tamo ostaviti torbicu sa ... ajde da ne ulazimo u to šta ona sve tamo može da ima. Isto tako, ovaj interfejs i neku njegovu implementaciju možete koristiti za generisanje i čuvanje kukija u nekoj Web-aplikaciji, u kojoj će token biti vrednost kukija, a `payload` - status jedne sesije. U svakom slučaju, interfejs `Store` na ovaj način želi da kaže da ga boli uvo za prirodu objekata predatih mu na čuvanje, te da o tome treba da razmišljaju vlasnici.
 
 ### Prvi pitonizam: višestruke povratne vrednosti iz funkcija
 
@@ -89,7 +89,7 @@ U Go-u je prirodno da funkcija može da vrati više stvari odjednom; ovo je mož
 Sa stanovišta pozivača ovih metoda, ovaj tango izgleda nekako ovako, pod uslovom da u ruci imate nešto što implementira interfejs `Store` (a što se dole zove `store`):
 
 ```go
-	something := "neki qrac"
+	something := "neki q..."
 	token, err := store.Store(something)
 	if err != nil {
 		// kuknjava zbog greške
@@ -155,7 +155,7 @@ import "crypto/rand"
 
 Ovako se u Go-u importuju paketi. Nakon importa, sve što ima u paketu, a počinje velikim slovom, biće vam dostupno. Ovde smo importovali `crypto/rand` paket zbog toga što kažu da ima toliko zajeban generator slučajnih brojeva da na njemu možete bazirati kriptovalute. Doduše, u Go-u postoji i odrtaveli `math/rand` kojeg treba izbegavati kad god vam treba slučajnost za nekakve šifre ili lozinke (mislim da je on tu samo zbog kompatibilnosti sa starim kodom). Zbog premale entropije, `math/rand` je predvidljiv kao i naši fudbaleri kada šutiraju na gol.
 
-Koliko je Go neposredan u svim pogledima, govori i ovo. Ako želite da baš **ovu** biblioteku koristite u nekom svom programu, dovoljno je pokrenuti komandu `go get`, da bi privukli biblioteku baobabu...
+Koliko je Go neposredan u svim pogledima, govori i ovo. Ako želite da baš **ovu** biblioteku koristite u nekom svom programu, dovoljno je pokrenuti komandu `go get`, da bi privukli ovu biblioteku baobabu...
 
 ```
     $ go get github.com/gordost/ogou   
@@ -167,7 +167,7 @@ Koliko je Go neposredan u svim pogledima, govori i ovo. Ako želite da baš **ov
     import "github.com/gordost/ogou"
 ```
 
-Baš zgodno, zar ne?
+Zgodno, zar ne?
 
 ---
 
@@ -244,7 +244,7 @@ Na osnovu `cap()`-a (koji je ovde 10), vidimo da je Go ispravno zaključio da je
 ```
     [3 4 5 6] 4 7
 ```
-Ispada da je `s` odnekle izvukao nešto što naizgled nema, sudeći prema ispisu gore. Ali ovo upravo znači da je slajs `s` zaista samo prozor kroz koji se posmatra niz-pozadinac `a`, i da je rastegljiv do kapaciteta potonjeg. Potvrdimo ovo tako što ćemo izmeniti nešto u slajsu `s`, pa proveriti da li je ta izmena imala efekat na niz-pozadinca `a`, ali isto tako i na slajs `s2`, jer je i taj slajs baziran na `a`:
+Ispada da je `s` odnekle izvukao nešto što naizgled nema, sudeći prema ispisu gore. Ali ovo upravo znači da je slajs `s` zaista samo prozor kroz koji se posmatra niz-pozadinac `a`, i da je rastegljiv do kapaciteta potonjeg. Potvrdimo ovo tako što ćemo izmeniti nešto u slajsu `s`, pa proveriti da li je ta izmena imala efekat na niz-pozadinca `a`, ali isto tako i na slajs `s2` koji je isto tako baziran na `a`:
 ```go
     s[3] = 3000
     fmt.Println(a) 
@@ -277,7 +277,7 @@ Slajs `s` je ostao isti kao što je bio, jer operacija `append()` ne mutira `s`.
     10 10
 ```
 
-A sad, prc: izvucimo novi slajs `y` dodavanjem još jednog elementa na `x`. Očekujemo da Go više neće biti u stanju da ga zavlači starom niz-pozadincu za potrebe slajsa `y`, jer ovaj više nema za to potreban kapacitet, i da će biti prinuđen izmisliti novog niz-pozadinca, da bi na njemu temeljio `y`:
+A sad, prc: izvucimo novi slajs `y` dodavanjem još jednog elementa na `x`. Očekujemo da Go više neće biti u stanju da ga zavuče starom niz-pozadincu, jer ovaj više nema za to potreban kapacitet, i da će biti prinuđen izmisliti novog niz-pozadinca, da bi na njemu temeljio `y`:
 ```go
     y := append(x, 10000)
     fmt.Println(y) 
@@ -299,7 +299,7 @@ Vidimo da je sada `y` duži od `a`, što znači da `y` sada posmatra nekog drugo
 ```
 ___
 
-Da bi zadovoljio `y`, Go je izmislio novog niz-pozadinca za `y`. Primetimo da mi tom novom nizu-pozadincu ne ne znamo čak ni ime. Pitanje glasi: a gde je sad pa **taj** niz, i kako mu prići? I da li uopšte treba da mu prilazimo? I ako ne, zašto?
+Da bi zadovoljio `y`, Go je izmislio novog niz-pozadinca za `y`. Primetimo da mi tom novom nizu-pozadincu ne znamo čak ni ime. Pitanje glasi: a gde je sad pa **taj** niz, i kako mu prići? I da li uopšte treba da mu prilazimo? I ako ne, zašto?
 
 Iako i za to postoje tehnike (`package reflect`), mi se na tog novog niza-pozadinca nit' možemo, nit' moramo referisati, osim ako ne pišemo nešto kao debugger. Obične smrtnike treba da boli uvo za nizove-pozadince. U stvari, dugo ćete po standardnim bibliotekama kopati da bi našli mesto gde se neko zeza sa pravim nizom, a ne slajsom. Normalno je kreirati slajs kad god vam zatreba nešto što liči na niz, a nizovima-pozadincima neka se bavi Go.
 
@@ -308,11 +308,11 @@ Primetimo sada nešto malkice čudnjikavo. Ako bi sada najednom odštampali `len
     fmt.Println(len(y), cap(y))
 ```
 ```
-    11 i 20
+    11 20
 ```
 Au, bre, kako sad pa to? Dobro, 'ajde, razumemo da je `len(y)` sada 11. Na kraju krajeva, `len(y)` smo dobili tako što smo na slajs dužine 10 dodali još jedan element. Ali otkud sad ovo 20? :confused: 
 
-Stvar je u tome što je izmišljanje novog mrše za mrčenje jedna skupa operacija koja iziskuje kopiranje starih elemenata, pa Go pokušava da joj spusti cenu. Go razmišlja nekako ovako: *aha, sada mi treba mrša dužine 11, ali šta ako ovaj tenkre malo kasnije doda još nešto, pa mi zatreba 12? Hmmm... 'ajde zato da ja odmah sada, dok sam tu, sklepam mršu duplog kapaciteta u odnosu na onog starog, jer me to manje košta nego da svaki čas izmišljam novog kad god ova budala doda jedan element*.
+Stvar je u tome što je izmišljanje novog mrše za zavlačenje jedna skupa operacija koja iziskuje kopiranje starih elemenata, pa Go pokušava da joj spusti cenu. Go razmišlja nekako ovako: *aha, sada mi treba mrša dužine 11, ali šta ako ovaj tenkre malo kasnije doda još nešto, pa mi zatreba 12? Hmmm... 'ajde zato da ja odmah sada, dok sam tu, sklepam mršu duplog kapaciteta u odnosu na onog starog, jer me to manje košta nego da svaki čas izmišljam novog kad god ova budala doda jedan element*.
 
 Drugim rečima, Go na ovaj način nalazi dovoljan kapacitet za rad vaših slajseva eksponencijalnom brzinom, što je uglavnom zadovoljavajuće.
 
@@ -324,7 +324,7 @@ Jebote, toliko reči zbog jednog slajsa. Vreme je da se ide dalje:
         ...
     }    
 ```
-Ovo prosto znači da `random()` ne prima nikakve parametre, a vraća string i grešku (error). Po veoma prihvaćenoj konvenciji među Gopherima, ako je error == nil, nema greške. Ovo je i somu jasno.
+Ovo prosto znači da `random()` ne prima nikakve parametre, a vraća string i grešku (error). Po veoma prihvaćenoj konvenciji među Gopherima, ako je error == nil, nema greške. Ovo je i somu jasno. Idemo dalje:
 
 ---
 
@@ -503,7 +503,7 @@ Drugim rečima, 1:0 za Go na ovom mestu.
 
 ---
 
-Od sada će disekcija funkcije `random()` ići brže, jer smo do sada dosta naučili:
+Od sada će disekcija funkcije `random()` ići malo brže, jer smo do sada dosta naučili:
 ```go
 	for i, v := range buf {
 		buf[i] = tokenLetters[v % byte(len(tokenLetters))]
@@ -531,7 +531,7 @@ var tokenLetters = []byte("abc...789")
 
 ---
 
-Krajnji je red je da se vratimo na implementaciju interfejsa `Store`, do ne zaboravimo šta smo ovde počeli.
+Stvarno, krajnji je red je da se vratimo na implementaciju interfejsa `Store`, do ne počnemo zaboravljati ono što smo počeli.
 
 
 ###  Prvi pokušaj, a treći pitonizam: pa ovo mu ga dođe kao rečnik/mapa/yebemliga šta je!
@@ -631,13 +631,13 @@ U Javi, kompajler ne poznaje čitanje iz mape, pa to činite pozivima biblioteke
     v = m.get(key)
 ```
 
-U slučaju da ključ `key` nije u mapi, `m.get(key)` će vratiti `null`. Međutim, ako ključ `key` jeste u mapi, ali tamo se potrefilo da ima vrednost baš `null`, opet će vam `m.get(key)` vratiti `null`. Drugim rečima, U Javi, ove dve situacije prostim čitanjem nije moguće razlikovati. Zato ako nam treba razlika, u pomoć moramo prizvati metodu `m.containsKey()`, što znači da ćemo u tom slučaju mapu prozivati (skanirati) čitava 2 puta: jednom da bi saznali da li mapa sadrži zadatu vrednost, i još jednom da bi očitali tu vrednost. Ovo je još jedan WTF koji pripisujemo nemoći Jave da vrati više vrednosti odjednom. U Go-u, ovo je elegantno rešeno u jednom koraku.
+U slučaju da ključ `key` nije u mapi, `m.get(key)` će vratiti `null`. Međutim, ako ključ `key` jeste u mapi, ali se tamo potrefilo da ima vrednost baš `null`, opet će vam `m.get(key)` vratiti `null`. Drugim rečima, U Javi, ove dve situacije prostim čitanjem nije moguće razlikovati. Zato ako nam treba razlika, u pomoć moramo prizvati metodu `m.containsKey()`, što znači da ćemo u tom slučaju mapu prozivati (skanirati) čitava 2 puta: jednom da bi saznali da li mapa sadrži zadatu vrednost, i još jednom da bi očitali tu vrednost. Ovo je još jedan WTF koji pripisujemo nemoći Jave da vrati više vrednosti odjednom. U Go-u, ovo je elegantno rešeno u jednom koraku.
 
 Na kraju, ovako se konzumira ono što smo do sada napisali:
 
 ```go
     store := token.NewMapStore()
-    token, err := store.Store("neki qrac")
+    token, err := store.Store("neki q...")
     if err != nil {
     	panic(err)
     }
@@ -650,7 +650,7 @@ Na kraju, ovako se konzumira ono što smo do sada napisali:
 
 >###### O funkciji `panic()`
 >
->Funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke ili opasni frajeri paniče*. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako ipak uspaniče, valja biti frajer i potruditi se negde napraviti `recover()`. U suprotnom, program će odvaliti nosom o ledinu.
+>Funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke ili pravo opasni frajeri paniče*. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako ipak uspaniče, valja biti frajer i potruditi se negde napraviti `recover()`. U suprotnom, program će odvaliti nosom o ledinu.
 >
 >Go ima nešto što liči na Javinu obradu izuzetaka, ali ovo se ređe koristi. Mehanizam je baziran na standardnim `panic()` - `defer()` - `recover()` funkcijama. Ukratko, kad pozovete neku funkciju za koju znate da može da paniči, njenu paniku možete smiriti u nekoj od vaših `defer` funkcija koristeći funkciju `recover()`. Na ovaj način programu se daje šansa da se iščupa bez havarije:
 
@@ -673,7 +673,7 @@ Na kraju, ovako se konzumira ono što smo do sada napisali:
 
 ###### Unit testovi u Go-u
 
-Ekstra je super kad programiranje prema interfejsima podseća na pisanje pozorišnog komada, pri čemu je programer ujedno i pisac i reditelj. Interfejsi su **lica** u komadu, a metode su njihove **replike** koje glumci moraju da nauče. Implementacije interfejsa su **glumci**. Nekima ćete biti više, nekima manje zadovoljni, ali je važno, bez obzira na to kojim ste glumcima podelili uloge, da se odvija isti komad. Svi drugi tipovi i funkcije koje nisu ni interfejsi, ni njihove implementacije su **rekviziti**, kao na primer naša funkcija `random()`. Ona podseća na pištolj koji izađe na videlo na sred stola čim se podigne zavesa, a za kojeg znate da će kad-tad u toku predstave da opali. 
+Ekstra je super kad programiranje prema interfejsima podseća na pisanje pozorišnog komada, pri čemu je programer ujedno i pisac i reditelj. Interfejsi su **lica** u komadu, a metode su njihove **replike** koje glumci moraju da nauče. Implementacije interfejsa su **glumci**. Nekima ćete biti više, nekima manje zadovoljni, ali je važno, bez obzira na to kojim ste glumcima podelili uloge, da se odvija isti komad. Svi drugi tipovi i funkcije koje nisu ni interfejsi, ni njihove implementacije su **rekviziti**, kao na primer naša funkcija `random()`. Ona podseća na pištolj na stolu koji izađe na videlo čim se podigne zavesa, a za kojeg znate da će kad-tad u toku predstave da opali. 
 
 E sad, šta su unit-testovi? Unit teastovi su **audicija** za glumce; ulogu nećete dati glumcima koji ne prođu audiciju, zar ne? Vrlo je važno da glumce podvrgnete nekakvim izazovima, da bi proverili da li su oni zaista naučili svoju ulogu, kao i da li je igraju na dobar način. U praksi, kôd nekog programa često menjate i ispravljate, pa vam unit-testovi dođu kao sigurnosna mreža. Oni proveravaju da li su vaše poslednje izmene nešto pokvarile.
 
@@ -735,7 +735,7 @@ Ako bismo sada skoknuli do direktorijuma `token` i izvršili ovaj unit-test, dob
     ok  	github.com/aboutgo/token	0.005s
 ```
 
-Tako izgleda izveđtaj kada se sve u redu. Da bi pokazali kako je kad nešto nije u redu. namerno ćemo nešto malkice da pokvarimo, da bi videli kako unit-test čumi bagove kao čuma decu. Izbrišimo sve u `mapStore.Store()`, i napravimo izmenu koja uvek vraća isti token, bez sačuvavanja:
+Tako izgleda izveštaj kada se sve u redu. Da bi pokazali kako je to kad nešto nije u redu, namerno ćemo nešto malkice da pokvarimo, da bi videli kako unit-test čumi bagove kao čuma decu. Izbrišimo sve u `mapStore.Store()`, i napravimo izmenu koja uvek vraća isti token, bez sačuvavanja:
 
 ```go
 func (ms mapStore) Store(payload interface{}) (string, error) {
@@ -796,15 +796,15 @@ Posmatrajmo naredbu
 ```
 Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova naredba se izvršava u petlji tačno 100 puta. Svaki put kada se ona izvrši, `Go` lansira novu nit (*thread*) u kojoj se izvršava funkcija `testStoreFetch`. Međutim, odmah zatim, ne čekajući da se prva nit završi, lansira se još jedna ista takva nit, pa još jedna, pa još jedna... i tako 100 puta. Na kraju petlje će biti kao da smo pustili roj od 100 niti od kojih svaka izvršava jednu te istu funkciju u nekakvom isprepletanom kompjuterskom vrememnu. Na kraju petlje čekamo jednu desetinku sekunde, da nitima iz roja damo dovoljno vremena da naprave karambol i... ka-boom!
 
-Stvar je u tome što je mapa jedna jedina, a niti brate ima 100 komada. I taman kada jedna nit počne u nju nešto da piše, ona biva na pola posla prekinuta jer neka druga nit isto tako pokušava da tamo nešto piše. Ovo dovodi do *fatal error: concurrent map writes*, što izveštaj unit-testa potvrđuje.
+Stvar je u tome što je mapa jedna jedina, a niti/*thread*-ova ima brate 100 komada. I taman kada jedna nit počne u nju nešto da piše, ona biva na pola posla prekinuta jer neka druga nit isto tako pokušava da tamo nešto piše. Ovo dovodi do *fatal error: concurrent map writes*, što izveštaj unit-testa potvrđuje.
 
-U Javi, ovo se lako rešava tako što tamo postoji nešto što se zove `ConcurrentMap`, to jest mapa koja obećava da je *thread-safe*. *Thread-safe* znači da mapa implementira nešto nalik na semafor: samo jedna nit biva puštena da uđe u "kritičnu zonu", dok sve ostale čekaju na crveno dok ona prva ne obavi svoj posao i izađe. E sad: u Go-u, koliko je meni poznato, osim kanala (*channels*) nema ništa što je samo po sebi *thread-safe*. Međutim, jezičke konstrukcije namenjene paralelnom programiranju u Go-u su toliko razgovetne da se ja lično, bar što se paralelnog programiranja tiče, mnogo komfornije osećam u Go-u nakon samo mesec dana iskustva nego što sam se ikada osećao u Javi.
+U Javi, ovo se lako rešava tako što tamo postoji nešto što se zove `ConcurrentMap`, to jest mapa koja obećava da je *thread-safe*. *Thread-safe* znači da mapa implementira nešto nalik na semafor: samo jedna nit biva puštena da uđe u "kritičnu zonu", dok sve ostale čekaju na crveno dok ona prva ne obavi svoj posao i izađe. E sad: u Go-u, koliko je meni poznato, osim kanala (*channels*) nema ništa što je samo po sebi *thread-safe*. Međutim, jezičke konstrukcije namenjene paralelnom programiranju u Go-u su toliko razgovetne da se ja lično, što se paralelnog programiranja tiče, mnogo komfornije osećam u Go-u nakon samo mesec dana iskustva nego što sam se ikada osećao u Javi.
 
 ###  Drugi pokušaj: `SyncedMapStore`
 
-Nešto od paralelnog programiranja u Go-u smo već videli: to je naredba `go` po kojoj je programski jezik Go dobio ime. Ona lansira novu nit (*thread*) koja izvršava zadatu funkciju (u našem slučaju `testStoreFetch()`). Ovako puštene niti se u Go-u zovu go-rutine (*goroutines*). Go-rutine se ponašaju kao pušteni baloni napunjeni helijumom: na koje nemamo nikakav uticaj niti kontrolu. Kasnije ćemo videti da je i njih moguće podvrći kontroli, ali o tome kasnije.
+Nešto od paralelnog programiranja u Go-u smo već videli: to je naredba `go` po kojoj je programski jezik Go dobio ime. Ona lansira novu nit (*thread*) koja izvršava zadatu funkciju (u našem slučaju `testStoreFetch()`). Ovako puštene niti se u Go-u zovu go-rutine (*goroutines*). Go-rutine se ponašaju kao pušteni baloni napunjeni helijumom nad kojima nemamo nikakav uticaj niti kontrolu. Kasnije ćemo videti da je i njih moguće podvrći kontroli, ali o tome kasnije.
 
-Nama trenutno treba način da sinhronizujemo pristup mapi `mapStore`, da se *thread*-ovima ne dozvoli da navale na nju kao svinje. Za to služi `sync.Mutex` iz Go-ovog paketa `sync`. Ovako deklarišemo promenljivu tipa `sync.Mutex`
+Nama trenutno treba način da sinhronizujemo pristup mapi `mapStore`, da se *thread*-ovima ne dozvoli da bezobzirno navale na nju kao svinje. Za to služi `sync.Mutex` iz Go-ovog paketa `sync`. Ovako deklarišemo promenljivu tipa `sync.Mutex`
 
 ```go
     import "sync"
@@ -814,7 +814,7 @@ Nama trenutno treba način da sinhronizujemo pristup mapi `mapStore`, da se *thr
 
 Sada je sve nizbrdo. Na ulasku u zonu koju štitite pozovete `mu.Lock()`, na izlasku - `mu.Unlock()`. Ako neka nit naiđe na `mu.Lock()` u momentu kada je pre nje neka druga nit već prošla muteks, ona će čekati "na crveno" da ta druga nit napravi `mu.Unlock()`. Ako ima mnogo niti, ispred muteksa zna da se ponekad napravi kolona, ali će Go puštati kroz mutex jednu po jednu nit, kao murija kad na autoputu nešto pregradi, pa saobraćaj sliju u samo jednu traku, puštajući vozila u koloni jedno po jedno.
 
-Problemčić je što naš `mapStore` nema mesta za jedan takav muteks. Doduše... budući da mapa može da primi sve što je kompatibilno sa `interface{}`, ona bi mogla i da proguta muteks pod nekim ključem koji mi zadamo, na primer. Ali problem time ne bi nestao. Da bi se došlo do muteksa sačuvanog u mapi, potrebno je *čitati* iz mape, a to je upravo ono što pokušavamo da sinhronizujemo.
+Problemčić je što naš `mapStore` nema mesta za jedan takav muteks. Doduše... budući da mapa može da primi sve što je kompatibilno sa `interface{}`, ona bi mogla i da proguta muteks pod nekim ključem koji mi zadamo. Ali problem time ne bi nestao. Da bi se došlo do muteksa sačuvanog u mapi, potrebno je *čitati* iz mape, a to je upravo ono što pokušavamo da sinhronizujemo.
 
 U Go-u, za ovaj posao služe strukture. One su mnogo sličnije strukturama u C-u nego klasama u Javi, s' tom razlikom što strukture u Go-u mogu implmentirati metode. Stari kod napisan za potrebe `mapStore` nećemo ni bacati, niti menjati, nego ćemo ga prosto ponovo iskoristiti. Ne zato što je tako jednostavnije (u stvari, nije), nego da bi pokazali jednu od tehnika pomoću koje je moguće postiću efekat nasleđivanja iz jezika koji poznaju klase.
 
@@ -930,7 +930,7 @@ type syncedMapStore struct {
 }
 ```
 
-Ovo znači da će svaka kopija te strukture sadržati kopiju od `mapstore` i kopiju muteksa `mu`. Međutim, mape u Go-u, poput slajsova i kanala, su na neki način **već pointeri**: svaka kopija neke mape pokazuje na isti segment u memoriji gde original čuva svoje podatke. E sad, to što važi za mape (slajsove i kanale), ne važi ni za šta drugo, uključujući tu i mutekse. To znači da svaka kopija strukture `syncedMapStore` sadrži suštinski istu mapu `mapstore`, ali različit muteks. Go-rutine će zato zaključavati i otključavati svoje privatne kopije muteksa bez problema, ali će i dalje nastaviti da se kolju oko iste mape. Otuda bagčina.
+Ovo znači da će svaka kopija te strukture koju Go napravi, sadržati kopiju od `mapstore` i kopiju muteksa `mu`. Međutim, mape u Go-u, poput slajsova i kanala, su na neki način **već pointeri**: svaka kopija neke mape pokazuje na isti segment u memoriji gde original čuva svoje podatke. E sad, to što važi za mape (slajsove i kanale), ne važi ni za šta drugo, uključujući tu i mutekse. To znači da svaka kopija strukture `syncedMapStore` sadrži suštinski istu mapu `mapstore`, ali različit muteks. Go-rutine će zato zaključavati i otključavati svoje privatne kopije muteksa bez problema, ali će i dalje nastaviti da se kolju oko iste mape. Otuda bagčina.
 
 Stvar možemo popraviti a da pri tome ipak zadržimo ne-pointersku pririodu najnovije verzije `syncedMapStore`. Ipak, *na nekom mestu* moramo u priču uključiti pointer, jer je potreba nasušna da i kopije strukture `syncedMapStore` sadrže isti muteks. Ovog puta deklarisaćemo sam muteks kao pointer, inicijalizijući ga u konstruktoru:
 
@@ -962,7 +962,7 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
 }
 ```
 
-Ovoig puta naš unit-test će da prođe. Primetimo da će i u ovom slučaju dolaziti do kopiranja `syncedMapStore`-a kad god pozovemo neku od njenih metoda, ali će te kopije sadržati dva pointera koji pokazuju na istu stvar kao original. Zato je pointerka implementacija cele stvari možda ipak čistija. Ako ništa, kopiranje košta nešto, a brže je kopirati jedan pointer nego dva, zar ne? :smile: 
+Ovoig puta naš unit-test će da prođe. Primetimo da će i u ovom slučaju dolaziti do kopiranja `syncedMapStore`-a kad god pozovemo neku od njenih metoda, ali će te kopije sadržati dva pointera koji pokazuju na istu stvar kaoi  originali. Zato je pointerka implementacija cele stvari možda ipak čistija. Ako ništa, kopiranje košta nešto, a brže je kopirati jedan pointer nego dva, zar ne? 
 
 ###  Kanali (*channels*) i komunikacija između go-rutina
 
@@ -1100,7 +1100,7 @@ I to je to. Jednostavno, čisto, bez gužve. Ovaj idiom je toliko sladak da nije
 
 ---
 
-Ipak, nemojte nikad na ovaj način čitati iz kanala, osim u situacijama kada ste sigurni da će vaša go-rutina da završi posao u prihvatljivom roku. Čitanje iz kanala je *blokirajuće*, što znači da će vaš program ovde 3x da stane, i da čeka sve dok se tamo ne pojavi neka vrednost. E sad: a šta ako se temo nikada ne pojavi nikakva vrednost? Ili ako nam je vreme čekanja na tu vrednost neprihvatljivo? Takve slučajeve ćemo doživeti kao da se program zaglavio, zar ne?
+Ipak, nemojte nikad na ovaj način čitati iz kanala, osim u situacijama kada ste sigurni da će vaša go-rutina da završi posao u prihvatljivom roku. Čitanje iz kanala je *blokirajuće*, što znači da će vaš program ovde 3x da stane, i da čeka sve dok se tamo ne pojavi neka vrednost. E sad: a šta ako se tamo nikada ne pojavi nikakva vrednost? Ili ako nam je vreme čekanja na tu vrednost neprihvatljivo? Takve slučajeve ćemo doživeti kao da se program zaglavio, zar ne?
 
 Snabdene voki-tokijem ili ne, go-rutine, jednom lansirane, ponašaju se kao pušteni baloni nad kojima u opštem slučaju nemamo kontrolu. Iako je moguće uz nešto grčenja isprogramirati *nekakvu* kontrolu, ipak je najčistije pobrinuti se da se go-rutine kad-tad završe, a za komunikaciju sa njima koristiti kanale. Isto tako, uvek dajte svojim go-rutinama rok u kojima bi trebalo da završe svoj posao. Ovo se u Go-u lako implementira korišćenjem naredbe `select`, jedne prelepe jezičke konstrukcije motivisane upravo potrebama paralelnog programiranja.
 
@@ -1111,18 +1111,16 @@ Da bi ilustrovali poentu, učinićemo našu funkciju `suma` namerno nestašnom, 
 ```go
     rand.Seed(time.Now().UTC().UnixNano())
     ...
-	suma := func(m, n int, c chan int) {
-
-	}
-		if (rand.Intn(4) == 0) {
-			time.Sleep(1 * time.Second)
-		}
-		su := 0
-		for i := m; i <=n; i++ {
-			su += i
-		}
-		c <- su
-	}
+    suma := func(m, n int, c chan int) {
+        if (rand.Intn(4) == 0) {
+            time.Sleep(1 * time.Second)
+        }
+        su := 0
+        for i := m; i <=n; i++ {
+            su += i
+        }
+        c <- su
+    }
 ```
 
 Verovatnoća da će bar neka rutina da spava ovde je 55/64, što je dosta veliko da uz samo par pokušaja naletimo na ovu situaciju. Kada se to desi, rezultat izgleda ovako:
@@ -1151,36 +1149,36 @@ Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati kanal 
 Sada ćemo kreirati kanal koji ćemo predati go-rutini `wait`, a zatim u `select`-u čekati na konačni rezultat:
 
 ```go
-	c := make(chan int, 1)
-	go wait(c)
-	select {
-	case <-time.After(1 *time.Second):
-		fmt.Println("no result - timeout expired")
-	case s := <- c:
-		elapsed := time.Since(start)
-		fmt.Println(s, elapsed)
-	}
+    c := make(chan int, 1)
+    go wait(c)
+    select {
+    case <-time.After(1 *time.Second):
+        fmt.Println("no result - timeout expired")
+    case s := <- c:
+        elapsed := time.Since(start)
+        fmt.Println(s, elapsed)
+    }
 ```
 
-Naredba `select` služe za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, dušu dala za tajmere. Ona nam vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
+Naredba `select` služe za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, koja je do jaja za tajmere. Ona nam vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
 
 ---
 
 E sad: u slučaju da se zaista desi tajmout, kakva je sudbina one četiri go-rutine koje smo lansirali?
 
-Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi na njih u tom slučaju zaboravljamo. Zato je bitno pisati go-rutine tako da one što pre završe započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu to što rade šta god da rade, ali ovu tehniku nećemo ovde pokazati. Ipak, ako propustimo da go-rutine isprogramiramo tako da završe svoj posao, nakupiće nam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
+Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi na njih u tom slučaju zaboravljamo. Zato je bitno pisati go-rutine tako da one što pre završe započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu to što rade šta god da rade, ali ovu tehniku nećemo ovde pokazati, iako smo se dosta raspisali. Zapamtite, ako propustite da go-rutine isprogramirate tako da završe svoj posao, nakupiće vam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
 
 ___
 ___
 ---
 
-Na ovom mestu sam na početku mislio da završim ovo pisanije, ali mi savest nekoga ko ovo radi profesionalno ne da mira. Stvar je u tome što `syncedMapStore` nije ni za qrac. Dobro, u redu je ponekad skratiti pisanje nekog parčeta softvera ako mu, bar pod nekim uslovima, vidite upotrebnu vrednost. Stvar je u tome što bi ti uslovi u ovom slučaju bili truba, i glasili bi nešto kao *`syncedMapStore` možete koristiti, ali samo pod uslovom da s' vremena na vreme restartujete program*!
+Na ovom mestu sam na početku mislio da završim ovo pisanije, ali mi savest nekoga ko ovo radi profesionalno ne da mira. Stvar je u tome što `syncedMapStore` nije ni za q. Dobro, u redu je ponekad skratiti pisanje nekog parčeta softvera ako mu, bar pod nekim uslovima, vidite upotrebnu vrednost. Stvar je u tome što bi ti uslovi u ovom slučaju bili bulšit, i glasili bi nešto kao *`syncedMapStore` možete koristiti, ali samo pod uslovom da s' vremena na vreme restartujete program*!
 
 A ovo je, naravno... :scream:
 
 Problem je u tome što se u pravim garderobama često dešava da neki lik ili likuša preda neko njesra na čuvanje, a onda se na to popišmani i nikada se ne pojavi da to preuzme. Možda zato što je lik zaboravan, ili mu to nije dovoljno vredno. Nebitno, garderoba mora da ima način da uradi nešto sa stvarima koje tamo rakolje nenormalno dugo. U suprotnom, tamo bi se godinama nakupilo toliko đubreta da bi na kraju garderoba postala pretrpana.
 
-Sa garderobom ovo je još i đene-đene, ali šta ako se vaš `Store` koristi za čuvanje kukija na nekom serveru, gde ih em možete imati na milione, em im morate davati nekakav rok trajanja? Zato...
+Sa garderobom je ovo još i kako-tako, ali šta ako se vaš `Store` koristi za čuvanje kukija na nekom serveru, gde ih em možete imati na milione, em im morate davati nekakav rok trajanja? Zato...
 
 ###  Treći (i za sada poslednji) pokušaj: `TokenStore`
 
@@ -1195,10 +1193,11 @@ type syncedMapStore struct {
 }
 ```
 
-Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Doduše, tu je `mapStore`, a sa tim može da se barata.
+Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Ali zato je tu `mapStore`, a sa njim može da se barata.
 
-Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat kojeg sačuvamo u `mapStore`. A kada kasnije naiđe `Fetch`, mi iz mape izvučemo koverat, otvorimo ga, i vratimo rezultat:
+Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat i u `mapStore` sačuvamo koverat, a ne ono ptio nam je pozivar dao na čuvanje. Kad kasnije naiđe poziv metode `Fetch`, mi iz mape izvučemo koverat, otvorimo ga, i vratimo rezultat.
 
+Koverat koji smo opisali izgleda ovako:
 ```go
 type envelope struct {
  	payload interface{}
@@ -1226,13 +1225,13 @@ type tokenStore struct {
 }
 ```
 
-Primetite ugnježdavanje: struktura `syncedMapStore` na ovaj način postaje nerazdvojni deo strukture `tokenStore`, kao zakrpa na vreći. Elementima ugnježdene strukture se pristupa kao da pripadaju glavnoj strukturi (oni u stvari tu i pripadaju). Ako imamo instancu strukture `tokenStore` koja se zove `ts`, muteksu koji strukturi donosi `syncedMapStore` se pristupa ovako:
+Primetite ugnježdavanje: struktura `syncedMapStore` na ovaj način postaje nerazdvojni deo strukture `tokenStore`, kao zakrpa na vreći. Elementima ugnježdene strukture se pristupa kao da pripadaju glavnoj strukturi (oni u stvari tu i pripadaju). Ako imamo instancu strukture `tokenStore` koja se zove `ts`, muteksu koji strukturi donosi `syncedMapStore` se pristupa kao da te pod-strukture i nema:
 
 ```go
     ts.mu
 ```
   
-S'tim u vezi, primetimo jednu jako interesantnu stvar. Ako i sada, kao što smo ranije činili, napišemo konstruktor za `tokenStore`, kompajler ovog puta neće kmečati. Zašto?
+S' tim u vezi, primetimo jednu jako interesantnu stvar. Ako i sada, kao što smo ranije činili, napišemo konstruktor za `tokenStore`, kompajler ovog puta neće kmečati. Zašto?
 
 ```go
 func NewTokenStore(ttl time.Duration) Store {
@@ -1247,13 +1246,13 @@ To je zato što `tokenStore` već implementira `Store`! Ovo nije lako odmah vide
 Ipak, mi ovde moramo prejahati obe metode, zbog potrebe pakovanja i raspakivanja koverti, a koju nismo imali ranije:
 
 ```go
-func (mem *tokenStore) Store(payload interface{}) (string, error) {
-	envelope := envelope{payload, time.Now(), mem.ttl}
-	return mem.syncedMapStore.Store(&envelope)
+func (ts *tokenStore) Store(payload interface{}) (string, error) {
+	envelope := envelope{payload, time.Now(), ts.ttl}
+	return ts.syncedMapStore.Store(&envelope)
 }
 
-func (mem *tokenStore) Fetch(token string) (interface{}, error) {
-	envelopeProbe, err := mem.syncedMapStore.Fetch(token)
+func (ts *tokenStore) Fetch(token string) (interface{}, error) {
+	envelopeProbe, err := ts.syncedMapStore.Fetch(token)
 	if err != nil {
 		return nil, err
 	}
@@ -1271,7 +1270,7 @@ func (mem *tokenStore) Fetch(token string) (interface{}, error) {
 U kodu gore nema mnogo toga novog, tako da nećemo potrošiti previše vremena na disekciju. Ipak, uočimo liniju
 
 ```go
-    return mem.syncedMapStore.Store(&envelope)
+    return ts.syncedMapStore.Store(&envelope)
 ```
 
 Ovako se u Go-u poziva metoda ugnježdene strukture (u našem slučaju `syncedMapStore`), ali ovo se ne koristi baš često. Za razumevanje Go-a, važnije je reći nešto o sledećoj liniji: 
@@ -1282,7 +1281,7 @@ Ovako se u Go-u poziva metoda ugnježdene strukture (u našem slučaju `syncedMa
 
 Hmmm... ovo je baš čudno. I liči na nešto poznato, a i ne liči :unamused:
 
-Možda malo buni to što su identifikatori `envelope` koji se nalazi krajnje levo, i idnetifikator `envelope` krajnje desno dve različite stvari. Onaj levo je ime promenljive `envelope`, a desno - ime tipa `envelope`, što je naša struktura gore. Za Go, ovde nema zabune; Go poznaje kontekst u kojem se ova dva doslovce jednaka identifikatora koriste, pa zna da ih razlikuje, ali za ljude kojima je Go nov jezik, ovo može biti problem. Zato prekrstimo ime promenljive u nešto drugo, i pokušajmo pogoditi šta ova konstrukcija radi:
+Možda malo buni to što su identifikatori `envelope` koji se nalazi krajnje levo, i idnetifikator `envelope` krajnje desno dve različite stvari. Onaj levo je ime promenljive `envelope`, a desno - ime tipa `envelope`, što je naša struktura gore. Za Go, ovde nema zabune; Go poznaje kontekst u kojem se ova dva doslovce jednaka identifikatora koriste, pa zna da ih razlikuje. Ali za ljude kojima je Go nov jezik, ovo može biti problem. Zato prekrstimo ime promenljive u nešto drugo, i pokušajmo pogoditi šta ova konstrukcija radi:
 
 ```go
 	env, ok := envelopeProbe.(envelope)
@@ -1292,7 +1291,7 @@ Sada je valjda malkice jasnije.
 
 Ova konstrukcija se u Go-u zove *type assertion*, jebemliga kako se prevodi na srpski. Možda *utvrđivanje tipova*?
 
-Elem, `envelopeProbe` je promenljiva koja u ovoj konstrukciji mora da bude instanca nekakvog interfejsa. Ova konstrukcija utvrđuje da li je vrednost te promenljive istog tipa kao onaj naveden u zagradi iza one tačke. Ako nije, `ok` će postati `false` i sa promenljivom `env` nećemo moći ništa pametno uraditi. Ali ako jeste, `ok` će postati `true`, i promenljivu `env` ćemo nadalje moći koristiti kao promenljivu tipa kojeg testiramo.
+Elem, `envelopeProbe` je promenljiva koja u ovoj konstrukciji mora da bude instanca nekakvog interfejsa. Ova konstrukcija utvrđuje da li je vrednost te promenljive istog tipa kao onaj naveden u zagradi iza one tačke. Ako nije, `ok` će postati `false` i sa promenljivom `env` nećemo moći ništa pametno uraditi. Ali ako jeste, `ok` će postati `true`, i promenljivu `env` ćemo nadalje moći koristiti kao promenljivu tipa kojeg utvrđujemo.
 
 Pošto znamo kako je nastala promenljiva `envelopeProbe`, tu liniju smo mogli napisati i ovako, ignorišući `ok`:
 
@@ -1310,27 +1309,31 @@ Primetimo da, čim je provera prošla, promenljivu `env` možemo koristiti kao p
     }
 ```
 
-I to bi bilo to. Ovako smo tokenima dali novu funkcionalnost (rok trajanja), ali time se priča ne završava. Rekli smo da izjanđale tokene valja čistiti, jer bi nam u suprotnom naša mapa samo rasla, ali kako?
+I to bi bilo to. 
+
+Ovim smo tokenima dali novu funkcionalnost (rok trajanja), ali time se priča ne završava. Rekli smo da izjanđale tokene valja čistiti, jer u suprotnom naša mapa bi samo rasla, ali kako?
 
 ---
 
-U Go-u, ako znamo ključ, stavku iz mape pod tim ključem moguće je brisati na sledeći način:
+U Go-u, ako znamo ključ, stavku iz mape sačuvanu pod tim ključem moguće je brisati ovako:
 
 ```go
     delete(m, key)
 ```
 
-E sad, kako da znamo koji ključ da brišemo? Kao prvo, mape su skroz nepogodne da po njima jurimo izjanđale tokene. Stvar je u tome što je u mapi redosled tokena za nas slučajan. Da bi pronašli jedan jedini matori token, rizikujemo da zbog toga moramo da prođemo celu mapu, a ovo nije uredno sve dok postoji šansa da neke druge niti čekaju na mapu kao na ozeblo sunce.
+E sad, kako da znamo koji ključ da brišemo? 
 
-U Go-u, prolaz kroz neku mapu moguće je izvršiti ovako:
+Imajmo u vidu da su mape skroz nepogodne da po njima jurcamo izjanđale tokene. U mapi, redosled tokena je za nas slučajan. Da bi pronašli jedan jedini matori token, rizikujemo da zbog toga moramo da prođemo celu mapu. Ovo nije uredno sve dok postoji šansa da neke druge niti čekaju na mapu kao na ozeblo sunce.
+
+Kompletnosti radi, u Go-u, prolaz kroz neku mapu se vrši ovako:
 ```go
     for k, v := range m {
         ...
     }
 ```
-U našem slučaju, ako bi prolazili kroz mapu na ovaj način, to bi valjalo činiti iza zaključanog muteksa, dok gomila frugih niti (*thread*-ova) može da čeka na upis ili čitanje. Ovo, naravno, savestan programer ne može sebi dozvoliti.
+U našem slučaju, ako bi prolazili kroz našu mapu na ovaj način, to bi valjalo činiti iza zaključanog muteksa dok gomila frugih niti (*thread*-ova) moguće čeka na upis ili čitanje. Ovo, naravno, savestan programer ne može sebi dozvoliti.
 
-Moramo naći način da nam pristup izjanđalim tokenima bude brži. U tu svrhu, prvo ćemo definisati ono što znamo da moramo. Definisaćemo strukturicu u kojoj držimo informaciju o jednom jedinom tokenu, kao i informaciju o izjanđalosti tog tokena. Za to je dovoljno da na jednom mestu grupišemo token i kovertu koju smo pod tim tokenom sačuvali:
+Moramo naći način da nam pristup izjanđalim tokenima bude brži. U tu svrhu, prvo ćemo definisati ono što znamo da moramo. Definisaćemo strukturicu u kojoj držimo informaciju o jednom jedinom tokenu, kao i informaciju o izjanđalosti tog tokena. Dovoljno je da na jednom mestu grupišemo token i kovertu koju smo pod tim tokenom sačuvali:
 
 ```go
 type entry struct {
@@ -1339,13 +1342,13 @@ type entry struct {
 }
 ```
 
-Kad god nam je u ruci instanca ove strukture, izjanđalost možemo proveriti metodom `expired()` koju implementira `*envelope`. Budući da bi u tom slučaju znali i token, znali bi šta da brišemo iz mape. *So far so good*.
+Kad god nam je u ruci instanca ove strukture, janđalost tokena možemo proveriti metodom `expired()` koju implementira `*envelope`. Budući da bi u tom slučaju znali i token, znali bi šta da brišemo iz mape ukoliko je izjanđao s. *So far so good*.
 
-E sad: jedno je imati ovu strukturicu, ali pronalaziti tokene zrele za progon, to je nešto sasvim drugo. Mi želimo da nam se brisanje starih tokena dešava što brže, uz što manje blokiranja drugih niti (*thread*-ova) na nekom muteksu. Zbog toga nam se čini super ako ceo taj posao završi sama metoda `Store()`. Ona ionako **mora** u jednom trenutku zaključati muteks, kako god se dovijali. Zašto onda ne iskoristiti to vreme da o istom trošku pronađe tačno jedan izjanđao token i, ako ga pronađe, sedne na njegovo mesto? Ovo mora da se odvija što je moguće brže tako da nijedan poziv metode `Store()` ne traje značajno duže od bilo kog drugog poziva. Imajmo u vidu da klijenti imaju slobodu da prozivaju naš interfejs pod kontrolom nekakvog tajmera, tako da bi bilo fensi da se ti pozivi odvijaju glatko, bez značajnih razlika u dužini izvršavanja.
+E sad: jedno je imati ovu strukturicu, ali pronalaziti tokene zrele za progon, to je nešto sasvim drugo. Mi želimo da nam se brisanje starih tokena dešava što brže, uz što manje blokiranja drugih niti (*thread*-ova) na nekom muteksu. Zbog toga nam se čini super ako ceo taj posao završi sama metoda `Store()`. Ona ionako **mora** u jednom trenutku zaključati muteks, kako god se dovijali. Zašto onda ne iskoristiti to vreme da o istom trošku pronađe tačno jedan izjanđao token i, ako ga pronađe, sedne na njegovo mesto? Ovo mora da se odvija što je moguće brže tako da nijedan poziv metode `Store()` ne traje značajno duže od bilo kog drugog poziva. Imajmo u vidu da klijenti imaju slobodu da prozivaju naš interfejs pod kontrolom nekakvog tajmera, tako da bi bilo stvarno fensi da se ti pozivi odvijaju glatko, bez značajnih razlika u dužini izvršavanja.
 
 ---
 
-Pada na um sledeća ideja. Ako bi u početku recimo imali prazan slajs neke početne dužine, a čiji bi članovi u početku svi bili `nil`, mogli bi taj slajs da obilazimo kao nekakav kružni bafer, jureći po njemu izjanđale tokene:
+Pada na um jedna ideja. Ako bi u početku recimo imali prazan slajs neke početne dužine, a čiji bi članovi u početku svi bili `nil`, mogli bi taj slajs da obilazimo kao nekakav kružni bafer, jureći po njemu izjanđale tokene:
 
 ```go
     buffer := make([]*entry, initialCapacity)
@@ -1366,7 +1369,7 @@ Na ovaj način bismo osigurali da se izjanđali tokeni brišu.
 
 ---
 
-Iako sve ovo zvuči do jaja, ovde ipak ima nešto što to nije. Već smo videli da je u Go-u, kao uostalom i u drugim programskim jezicima sveta, nemoguće alocirati novi bafer bez tumbanja/kopiranja memorije. A kada se to desi, metoda `Store()` će vidno da štucne. Zavisno od količine tokena, ona će odavati utisak da se kod nje nešto vidno desilo. 
+Iako sve ovo zvuči do jaja, ovde ipak ima nešto što to nije. Već smo videli da je u Go-u, kao uostalom i u drugim programskim jezicima sveta, nemoguće alocirati novi bafer bez tumbanja/kopiranja memorije. A kada se to desi, metoda `Store()` će vidno da štucne. Zavisno od količine tokena koji se moraju kopirati, ona će odavati utisak da se kod nje nešto vidno desilo. 
 
 Stvarno, kako izgladiti ovu džombu?
 
@@ -1374,11 +1377,11 @@ Stvarno, kako izgladiti ovu džombu?
 
 U pomoć nam priskaču povezane liste. Ako ste, kao ja, mislili da su povezane liste samo nešto što se uči u školi, evo prilike da se uverimo da one mogu da budu korisne i u praksi. 
 
-Umesto u nekakvom slajsu, informacije o tokenima (`entry`) ćemo držati u jednoj kružnoj povezanoj listi (kružnoj pantljičari). U kružnim povezanim listama, sledeći član od poslednjeg je prvi. U stvari, ovde je teško reći šta je prvo a šta poslednje; liči na traženje ćoška u okrugloj sobi, zar ne? 
+Umesto u nekakvom slajsu, informacije o tokenima (`entry`) ćemo držati u jednoj kružnoj povezanoj listi (iliti kružnoj pantljičari). U kružnim povezanim listama, sledeći član od poslednjeg je prvi. U stvari, ovde je teško reći šta je prvo a šta poslednje; liči na traženje ćoška u okrugloj sobi, zar ne? 
 
-Sve ostalo ćemo raditi isto kao i u algoritmu opisanom gore. Jedina je razlika što promenljiva `curr` ovog puta neće biti prirodan broj, nego pokazivač na tekući članak naše pantljičare. A umesto inkrementiranja promenljive `curr`, na sledeći `curr` ćemo prelaziti sa `curr = curr.next`
+Sve ostalo ćemo raditi isto kao i u algoritmu opisanom gore. Jedina je razlika što promenljiva `curr` ovog puta neće biti prirodan broj, nego pokazivač na tekući članak naše pantljičare. A umesto inkrementiranja promenljive `curr`, na sledeći ćemo prelaziti sa `curr = curr.next`
 
-Za nas značajna razlika nastaje kad naiđe situacija u kojoj listu treba proširiti. Za razliku od slajsa, kod povezanih lista ovo može i bez tumbanja memorije (*in-place reallocation*). Ako nam se u tom trenutku pri ruci zgodno nađe ista takva lista, samo prazna (a pobrinućemo se da će da se nađe), sve što treba uraditi je "nalepiti" praznu listu na staru, i tako dobiti dvostruko dužu listu skoro bez ikakvog utroška vremena. U vremenu izvršavanja, ovakve situacije će se doživljavati kao da se nisu ni desile.
+Najbitnija razlika nastaje kad naiđe situacija u kojoj listu treba proširiti. Za razliku od slajsa, kod povezanih lista ovo može i bez tumbanja memorije (*in-place reallocation*). Ako nam se u tom trenutku pri ruci zgodno nađe ista takva lista, samo prazna (a pobrinućemo se da će da se nađe), sve što treba uraditi je "nalepiti" praznu listu na staru, i tako dobiti dvostruko dužu listu skoro bez utroška vremena. U vremenu izvršavanja, ovakve situacije će se doživljavati kao da se nisu ni desile.
 
 Definisaćemo strukturu za članak naše pantljičare, koju ćemo ovde nostalgično nazvati `tokenRing`:
 
@@ -1393,9 +1396,9 @@ Primetimo da ova struktura ujedno predstavlja i jedan članak, i celu pantljiča
 
 Da bi kod izgledao koliko-toliko uljudno, od rekvizita nam je potrebna fabrika praznih pantljičara. Ta fabrika bi trebalo da ima metodu `manufacture()`. Prvi put pozvana, metoda `manufacture()` će vratiti praznu pantljičaru inicijalne dužine. Sledeći put, `manufacture()` će vratiti pantljičaru iste dužine kao prvi put. Ovo zato da bi nova pantljičara, nakon lepljenja na onu staru, postala dvostruko duža. Pri svim sledećim pozivima ove metode, vraćena pantljičara bi trebala da bude dvostruko duža od prethodne.
 
-Na ovaj način će naša pantljičara, poput slajsova, eksponencijalnom brzinom nalaziti potreban kapacitet. Nakon izvesnog broja produženja, pantljičara će u jednom trenutku biti dovoljno dugačka da će algoritam opisan gore nailaziti isključivo na izjanđale tokene. Tada ćemo reći da je pantljičara dostigla stabilnost u odnosu na količinu tokena sa kojima se suočavamo. Od tada, pantljičaru neće biti potrebno dodatno proširivati.
+Na ovaj način bi naša pantljičara, poput slajsova, eksponencijalnom brzinom nalazila potreban kapacitet. Nakon izvesnog broja produženja, pantljičara će u jednom trenutku biti dovoljno dugačka da algoritam opisan gore nailazi isključivo na izjanđale tokene. U tom slučaju ćemo reći da je pantljičara postala stabilna u odnosu na količinu tokena sa kojom se suočavamo. Od tada, pantljičaru neće biti potrebno dodatno proširivati.
 
-I još nešto: efikasnosti radi, svaki put kad fabrika primi narudžbu za novu pantljičaru(metoda `manufacture()`), neposredno pre isporuke fabrika će lansirati go-rutinu koja će u odvojenoj niti praviti jednu još noviju. Za vreme koje je potrebno da se vraćena pantljičara iskonzumira, sve su šanse da će ta još novija biti spremna za isporuku kad zatreba. Na ovaj način, prelaz sa stare na novu pantljičaru biće izglađen.
+I još nešto: efikasnosti radi, svaki put kad fabrika primi narudžbu za novu pantljičaru(metoda `manufacture()`), neposredno pre isporuke fabrika će lansirati go-rutinu koja će u odvojenoj niti praviti jednu još noviju. Za vreme koje je potrebno da se vraćena pantljičara iskonzumira, sve su šanse da će ta još novija biti spremna za isporuku kad za to dođa red. Na ovaj način, prelaz sa stare na novu pantljičaru biće izglađen.
 
 Struktura potrebna za fabriku pantljičara izgleda ovako:
 
@@ -1420,7 +1423,7 @@ func newTokenRingFactory(initialCapacity int) *tokenRingFactory {
 }
 ```
 
-Primetite (mapnu) sinaksu građenja instance ove strukture. Ako ne želite da vodite računa o redosledu elemenata, ovako ih možete prozivati po imenu, pa redosled nije važan. Osim toga, neke elemente na ovaj način možete da izostavite, što sa sintaksom koju smo ranije koristili nije bio slučaj.
+Primetite (mapnu) sinaksu građenja instance ove strukture. Ako ne želite da vodite računa o redosledu elemenata, ovako ih možete prozivati po imenu, pa redosled nije važan. Osim toga, neke elemente na ovaj način možete da izostavite, što sa rednom sintaksom koju smo ranije koristili nije bio slučaj.
 
 Metoda `manufacture()` izgleda ovako:
 
@@ -1463,16 +1466,16 @@ Primetimo sledeće parče koda:
     }
 ```
 
-Promenljiva `demandCounter` će inicijalno biti -1, u kom slučaju nam odmah valja praviti pantljičaru budući da do sada nijednu nismo napravili. Na ovaj način će jedna pantljičara biti spremna za isporuku odmah iza `if`-a.
+Promenljiva `demandCounter` će inicijalno biti -1, u kom slučaju nam odmah valja praviti pantljičaru budući da do sada nijednu nismo nit' napravili, nit' isporučili. Na ovaj način će jedna pantljičara biti spremna za isporuku odmah iza `if`-a.
 
-Sada lansiramo go-rutinu da nam napravi još jednu, rezervnu, i za vreme dok ona još to radi, vraćamo onu koju je već spremna. To činimo čitanjem sa kanala rezervnih pantljičara (magacina). Ovo je razlog što kapacitet kanala treba da bude 2.
+Sada lansiramo go-rutinu da nam pravi još jednu, rezervnu, i za vreme dok ona još to radi, vraćamo onu koju je već spremna. To činimo čitanjem sa kanala rezervnih pantljičara (to jest, magacina). Ovo je razlog što kapacitet kanala treba da bude 2.
 
 ```go
     go makeNew()
     return <-fct.spareChannel
 ```
 
-Na kraju, zamijetimo funkciju `pow2()`: ona vraća stepen dvojke... dobro, karte su ovde malkice nameštene, jer za negativne argumente ona vraća keca umesto nekakav razlomak. Ovo je zato da bi tempirali kapacitet pantljičara prema našim potrebama. Osimn toga, Go ima nekakvo stepenovanje u `math`-paketu, ali samo za realne brojeve. Otuda `pow2()` :angry: 
+Na kraju, zamijetimo funkciju `pow2()`: ona vraća stepen dvojke... dobro, karte su ovde malkice nameštene, jer za negativne argumente ona vraća keca umesto nekakav razlomak. Ovo je da bi tempirali kapacitet pantljičara prema našim potrebama. Osim toga, Go ima nekakvo stepenovanje u `math`-paketu, ali samo za realne brojeve. Otuda `pow2()` :angry: 
 
 ---
 
@@ -1506,99 +1509,100 @@ func NewTokenStore(ttl time.Duration, initialCapacity int) Store {
 }
 ```
 
-Ovde je valjda sve jasno. Primetimo da smo metodu `Fetch()` već davno napisali negde gore. Kako se ona nigde ne referiše na nove elemente `curr`, `prev` i `tokenRingFactory`, ona ostaje kakva je i bila. Ostaje samo da napišemo novu verziju metode `Store()`:
+Ovde je valjda sve jasno. Primetimo da smo metodu `Fetch()` već davno napisali negde gore. Kako se ona nigde ne referiše na nove elemente `curr`, `prev` i `tokenRingFactory`, ona ostaje takva kakva je bila. Ostaje samo da napišemo novu verziju metode `Store()`:
 
 ```go
-func (mem *tokenStore) Store(payload interface{}) (string, error) {
-    envelope := envelope{payload, time.Now(), mem.ttl}
-    return mem.store(&envelope)
+func (ts *tokenStore) Store(payload interface{}) (string, error) {
+    envelope := envelope{payload, time.Now(), ts.ttl}
+    return ts.store(&envelope)
 }
 ```
 
 Kao što vidimo, ovde glavni posao radi privatna metoda `store()`, što znači da nju treba disecirati:
 
 ```go
-func (mem *tokenStore) store(envelope *envelope) (string, error) {
-    token, err := mem.syncedMapStore.Store(*envelope)
+func (ts *TokenStore) store(envelope *envelope) (string, error) {
+    token, err := ts.syncedMapStore.Store(*envelope)
     if err != nil {
         return "", err
     }
     entry := entry{token, envelope}
     storeAndBudge := func() {
-        mem.curr.entry = &entry
-        mem.curr = mem.curr.next
+        ts.curr.entry = &entry
+        ts.prev = ts.curr
+        ts.curr = ts.curr.next
     }
-    mem.mu.Lock()
-    defer mem.mu.Unlock()
-    if e := mem.curr.entry; e == nil {
+    ts.mu.Lock()
+    defer ts.mu.Unlock()
+    if e := ts.curr.entry; e == nil {
         storeAndBudge()
         return token, nil
     }
-    if e := mem.curr.entry.envelope; e.expired() {
-        delete(mem.mapstore, mem.curr.entry.token)
+    if e := ts.curr.entry.envelope; e.expired() {
+        delete(ts.mapstore, ts.curr.entry.token)
         storeAndBudge()
         return token, nil
     }
-    mem.expandTokenRing()
+    ts.expandTokenRing()
     storeAndBudge()
     return token, nil
 }
 ```
 
-Ova funkcija, prvo što uradi, jeste da zove nasleđenu metodu `Store()` iz `syncedMapStore`, da bi tako sačuvala zadatu kovertu. Primetimo da nam ovde ne treba nikakava sinhronizacija, jer `syncedMapStore` to već radi. Ali isto tako primetimo da, nakon ove linije, muteks iz `syncedMapStore` će biti otključan. Ovo znači da ćemo ga morati opet zaključavati čim krenemo da radimo sa promenljivima koje su vidljive i iz drugih niti/*thread*-ova.
+Ova funkcija, prvo što uradi, jeste da zove nasleđenu metodu `Store()` iz `syncedMapStore`, da bi tako sačuvala zadatu kovertu. Primetimo da nam ovde ne treba sinhronizacija, jer `syncedMapStore` to već radi. Ali isto tako primetimo da, nakon ove linije, muteks iz `syncedMapStore` će biti otključan. Ovo znači da ćemo ga morati opet zaključati čim krenemo da radimo sa promenljivima koje su vidljive i iz drugih niti/*thread*-ova.
 
-Nakon provere greške, metoda konstruiše novi `entry` za sačuvavanje, a zatim odmah definiše anonimnu funkciju `storeAndBudge` koja sačuvava taj `entry` i mrda tekući članak pantljičare za jedno mesto. Ova funkcijica će se ovde pozivati sa više mesta u glavnoj funkciji, pa smo je zato izdvojili u poseban *closure*. Primetimo da je ovo što piše samo definicija funkcije; ovde se ništa konkretno ne izvršava:
+Nakon provere greške `err`, metoda konstruiše novi `entry` za sačuvavanje, a zatim odmah definiše anonimnu funkciju `storeAndBudge` koja sačuvava taj `entry` i mrda tekući članak pantljičare za jedno mesto. Ova funkcijica će se ovde pozivati sa više mesta u glavnoj funkciji, pa smo je zato izdvojili u poseban *closure*. Primetimo da je ovo što piše samo definicija funkcije; ovde se ništa konkretno još ne izvršava:
 ```go
     entry := entry{token, envelope}
     storeAndBudge := func() {
-        mem.curr.entry = &entry
-        mem.prev = mem.curr
-        mem.curr = mem.curr.next
+        ts.curr.entry = &entry
+        ts.prev = ts.curr
+        ts.curr = ts.curr.next
     }
 ```
 
-Tek sada nailzai mesto gde imamo potrebu da eksplicitno zaključamo muteks koji nam donosi struktura `syncedMapStore`. Uvek zaključavajte muteks tačno onda kada za to imate potrebu, ni pre ni kasnije, a otključavajte ga čim možete. Nemojte, kao neki, zaključavati muteks na početku, za svaki slučaj, a otključavati ga na kraju, opet za svaki slučaj. Ovo utiče na propulzivnost vaših niti (*thread*-ova), smanjujući im mogućnost da se prirodno prepliću. 
+Tek sada nailazi mesto gde imamo potrebu da eksplicitno zaključamo muteks koji nam donosi struktura `syncedMapStore`. Uvek zaključavajte muteks tačno onda kada za to imate potrebu, ni pre ni kasnije, a otključavajte ga čim možete. Nemojte, kao neki, zaključavati muteks na početku, za svaki slučaj, a otključavati ga na kraju, opet za svaki slučaj. Ovo utiče na propulzivnost vaših niti (*thread*-ova), smanjujući im mogućnost da se prirodno prepliću. 
 
 Zamislite gosta kako ulazi u bar, a barmen, videvši ga na vratima, odmah "zaključa" bar samo za njega. Onda gost, umesto da naruči nešto, ode prvo u klonju da šora. Zatim dođe neki drugi gost i sa vrata vikne pivo, a barmen ga ljubazno obavesti da će morati da sačeka, i da će biti uslužen čim se onaj prvi gost vrati iz klonje i bude uslužen. Ovo ne bi bilo baš uredno, zar ne?
 
 Muteks zaključavamo samo onda kada radimo sa promenljavima koje vide druge niti(*thread*-ovi). Budući da od sada pa do kraja funkcije radimo samo sa takvima, muteks otključavamo pri izlasku iz funkcije naredbom `defer`:
 
 ```go
-    mem.mu.Lock()
-    defer mem.mu.Unlock()
+    ts.mu.Lock()
+    defer ts.mu.Unlock()
 ```
 
-Sada prvo proveravamo da li je tekuće mesto u pantljičari prazno. Ako jeste, snesemo na to mesto naše jaje (`entry`) i pomerimo se za jedno mesto. Nakon toga, vraćamo token:
+Sada prvo proveravamo da li je tekuće mesto u pantljičari prazno. Ako jeste, snesemo na to mesto naš `entry` i pomerimo se za jedno mesto. Nakon toga, vraćamo token:
  
 ```go
-    if e := mem.curr.entry; e == nil {
-        storeAndBudge()
-        return token, nil
-    } 
-```
-
-Ako tekuće mesto ipak nije prazno, proveravamo da li je token koji smo tamo našli izjanđao. Ako jeste, izbrišemo ga iz mape, pa učinimo isto kao malopre: 
-```go
-    if e := mem.curr.entry.envelope; e.expired() {
-        delete(mem.mapstore, mem.curr.entry.token)
+    if e := ts.curr.entry; e == nil {
         storeAndBudge()
         return token, nil
     }
 ```
 
-Neko će se možda ovde zapitati. a šta smo ovde uradili sa starim `entry`-jem kojeg smo našli u pantljičari?
+Ako tekuće mesto ipak nije prazno, proveravamo da li je token koji smo tamo našli izjanđao. Ako jeste, brišemo ga iz mape, pa učinimo isto kao malopre: 
+```go
+    if e := ts.curr.entry.envelope; e.expired() {
+        delete(ts.mapstore, ts.curr.entry.token)
+        storeAndBudge()
+        return token, nil
+    }
+```
 
-Taj `entry` nit' znamo kako, nit' možemo eksplicitno da brišemo. Zato ga prosto pregazimo, k'o pijan balegu. Ovim će pregaženi `entry` izgubiti referencu (na njega se više ništa neće referisati), pa će mu Go-ov `garabage collector` kad-tad smrsiti konce.
+Neko će se možda ovde zapitati: a šta smo ovde uradili sa starim `entry`-jem kojeg smo našli u pantljičari?
+
+Taj `entry` nit' znamo kako, nit' možemo eksplicitno da brišemo. Zato ga prosto pregazimo, k'o pijan balegu. Ovim će pregaženi `entry` izgubiti svoju poslednju referencu, pa će mu Go-ov `garabage collector` kad-tad smrsiti konce.
 
 Ostaje da se vidi šta ako nije ništa od ovog dvoje (to jest ako se na tekućem mestu nalazi nit' prazan, nit' izjanđao token)?
 
 U tom slučaju nam valja produžiti pantljičaru pozivom metode `expandTokenRing()`:
 
 ```go
-    mem.expandTokenRing()
+    ts.expandTokenRing()
 ```
 
-Čim je pantljičara produžena, na prazno mesto na kojem se posle toga nalazimo prosto snesemo jaje (`entry`), i zatim vratimo novi token.
+Čim je pantljičara produžena, na prazno mesto na kojem se posle toga nalazimo prosto snesemo naš `entry`, a zatim vratimo token.
 
 ```go
     storeAndBudge()
@@ -1610,35 +1614,35 @@ U tom slučaju nam valja produžiti pantljičaru pozivom metode `expandTokenRing
 Ostaje da se vidi kako šljaka `expandTokenRing()`. Ova funkcija je toliko kratka da skoro da i ne zaslužuje da bude funkcija. Ipak, ponekad valja i jednu jedinu liniju koda zamotati u funkciju, ako je tako čitljivije:
 
 ```go
-func (mem *TokenStore) expandTokenRing() {
-    last := mem.tokenRingFactory.manufacture()
+func (ts *TokenStore) expandTokenRing() {
+    last := ts.tokenRingFactory.manufacture()
     first := last.next
-    last.next = mem.curr
-    mem.prev.next = first
-    mem.curr = first
+    last.next = ts.curr
+    ts.prev.next = first
+    ts.curr = first
 }
 ```
 
-Funkcija `expandTokenRing()` prvo naruči novu kružnu pantljičaru, te joj odabere dva uzastopna članka za `first` i `last`. Ovde moramo voditi računa da sledeći od `last` bude `first`, jer novu pantljičaru želimo preseći baš na tom mestu, da bi je nastavili na staru:
+Funkcija `expandTokenRing()` prvo naruči novu kružnu pantljičaru, te joj odabere dva uzastopna članka za `first` i `last`. Ovde moramo voditi računa da sledeći od `last` mora da bude `first`, da bi pantljičara bila kružna. Novu pantljičaru želimo preseći baš na tom mestu, da bi je nastavili na staru:
 
 ```go
-    last := mem.tokenRingFactory.manufacture()
+    last := ts.tokenRingFactory.manufacture()
     first := last.next
 ```
 
-Dalje, znamo da članak `curr` stare pantljičare pokazuje na najstariji token. Za ovaj token još znamo i da je validan, jer u suprotnom pantljičaru ne bi ni produživali. Međutim, mi isto tako znamo da prethodnik od `curr` sadrži najmlađi token, jer je to poslednji token koji smo ikad u panljičaru dodali. Staru pantljičaru želimo seći baš na tom mestu, i nastaviti je na novu. Ovo je razlog što smo u algoritmu gore dužnosno pamtili prethodnika od `curr` u promenljivoj `prev`.
+Dalje, znamo da članak `curr` stare pantljičare pokazuje na najstariji token. Za ovaj token još znamo i to da je validan; u suprotnom, pantljičaru ne bi ni produžavali. Međutim, mi isto tako znamo da prethodnik od `curr` sadrži najmlađi token, jer je to poslednji token koji smo ikada pantljičari dodali. Staru pantljičaru želimo seći baš na tom mestu, i nastaviti je na novu. Ovo je razlog što smo u algoritmu gore dužnosno pamtili prethodnika od `curr` u promenljivoj `prev` svaki put kad `curr` mrdne za jedno mesto.
 
 Sada je laganica. Pantljičare spajamo tako što poslednji element nove pantljičare želimo da se produži u `curr`, a prethodnik od `curr` (što je kod nas `prev`) želimo da se produži u prvi element nove pantljičare (`first`). Na ovaj način čuvamo hronologiju tokena, tako da će najstariji token (`curr`) opet prvi doći na red za ispitivanje čim se novi prilepak potroši:
 
 ```go
-    last.next = mem.curr
-    mem.prev.next = first
+    last.next = ts.curr
+    ts.prev.next = first
 ```
 
-Ostaje da `curr` pomerimo tako da sedne na prvo prazno mesto u prilepku, što je kod nas `first`:
+Ostaje da `curr` pomerimo tako da pokazuje na prvo prazno mesto u prilepku:
 
 ```go
-    mem.curr = first
+    ts.curr = first
 ```
 
 I to bi bilo to. Ostaju unit-testovi, a njih nikada ne treba preskakati :smile:
@@ -1647,9 +1651,9 @@ I to bi bilo to. Ostaju unit-testovi, a njih nikada ne treba preskakati :smile:
 
 Neki shvataju unit-testove kao prioritet, i pišu ih pre nego što napišu i redak korisnog koda. Naravno, ovakvi testovi ne mogu odmah da prođu, ali se stanje vremenom popravlja, u taktu sa dodavanjem korisnog koda. Svaka čast ko ovako može.
 
-Neki shvataju unit-testove kao moranje, i pišu ih tek na kraju. Mislim da ovo nije baš pametno. I programeri su ljudi, te kad jednom završe koristan rad, u opasnosti su da samo zbrljaju par unit-testova na kraju, čisto da umire savest. Da bi pokrivenost koda testovima dostigla prihvatljiv nivo, ovde je potrebna velika količina samodiscipline i volje da se, nakon prividno završenog posla, napravi još jedan korak. Zato svaka čast ko ovako može.
+Neki shvataju unit-testove kao moranje, i pišu ih tek na kraju. Mislim da ovo nije baš pametno. I programeri su ljudi, te kad jednom završe koristan rad, u opasnosti su da samo zbrljaju par unit-testova na kraju, čisto da umire savest. Da bi pokrivenost koda testovima dostigla prihvatljiv nivo, ovde je potrebna velika količina samodiscipline i volje da se, nakon završenog posla, napravi još jedan dodatni korak. Zato svaka čast ko ovako može.
 
-Meni lično su unit-testovi zabava, jer na taj način podvrgavam kod iskušenjima koja se u praksi retko dešavaju. Nešto kao kad testiraju građevinu za opterećenja na koja se u praksi ne nailazi. Ja uvek počnem sa pisanjem korisnog koda, ali čim mi se zaokruži neka funkcionalnost, ja odmah dodam unit test za to jer me zabavlja da vidim da nešto radi.
+Meni lično su unit-testovi zabava, jer na taj način podvrgavam kod iskušenjima koja se u praksi retko dešavaju. Nešto kao kad testiraju građevinu za opterećenja na koja se u praksi ne nailazi. Ja uvek počnem sa pisanjem korisnog koda, ali čim mi se zaokruži neka funkcionalnost, ja odmah dodam unit test za to jer me zabavlja da vidim kako nešto radi.
 
 Prvi test koji ćemo ovde napisati testira `ringFactory`, da proveri da li mu kapacitet raste na planiran način. Dodajte novom fajlu `tokenstore_test.go` sledeće:
 
@@ -1681,7 +1685,7 @@ func checkCount(t *testing.T, ring *tokenRing, filter func(tr *tokenRing) bool, 
     }
 }
 ```
-Metoda `count`  vraća dužinu pantljičare, brojeći joj članke na ruke. Primetimo da metoda prima funkciju `filter` kao argument. Ovo će nam kasnije pomoći da u pantljičari prebrojimo važeće tokene. Ako je nil, kao ovde, filter se računa taman kao i da ne postoji:
+Metoda `count` koja se koristi gore vraća dužinu pantljičare, brojeći joj članke na ruke. Primetimo da metoda prima funkciju `filter` kao argument. Ovo će nam kasnije pomoći da u pantljičari prebrojimo važeće tokene. Ako je nil, kao ovde, filter se računa da je odsutan:
 
 ```go
 func (r *tokenRing) count(filter func(tr *tokenRing) bool) int {
@@ -1699,7 +1703,7 @@ func (r *tokenRing) count(filter func(tr *tokenRing) bool) int {
 }
 ```
 
-Korisno je reći da smo metodu `count` nalepili na `*tokenRing` u test-fajlu, a ne u fajlu gde `*tokenRing` inače stanuje. Ovo je moguće jer nam se unit-testovi nalaze u istom paketu kao i `tokenRing`. Ipak, kad jednom iskompajliramo glavni program naredbom `go build bla-bla`, mislim da ova metoda neće biti ulinkovana. Ona je tu samo za potrebe unit-testa, a ovo bi trebalo Go da zna.
+Korisno je reći da smo metodu `count` nalepili na `*tokenRing` u test-fajlu, a ne u fajlu gde `*tokenRing` inače stanuje. Ovo je moguće jer nam se unit-testovi nalaze u istom paketu kao i `tokenRing`. Ipak, kad jednom iskompajliramo glavni program naredbom `go build`, mislim da ova metoda neće biti ulinkovana. Ona je tu samo za potrebe unit-testa, a ovo bi trebalo Go da zna.
 
 Osim toga, primetimo liniju:
 ```go
@@ -1774,7 +1778,7 @@ func TestTokenStoreFetch(t *testing.T) {
 }
 ```
 
-Na početku napravimo novi `store` i odmah ga "izlijemo" kao `tokenStore`, da bi mogli da mu brojimo creva. Ovo zato što promenljiva `store` sadrži mršavu instancu interfejsa `Store`, što znači da preko nje nemamo nikakav pristup unutrašnjim organima implementacije. Otuda potreba za izlivanjem ove promenljive u `tokenStore`:
+Na početku napravimo novi `store` i odmah ga "izlijemo" kao `tokenStore`, da bi mogli da mu brojimo creva. Ovo zato što promenljiva `store` sadrži instancu interfejsa `Store`, što znači da preko nje nemamo nikakav pristup unutrašnjim organima ove implementacije. Otuda potreba za izlivanjem ove promenljive u `tokenStore`:
 
 ```go
     store := NewTokenStore(ttl, initialCapacity)
@@ -1795,7 +1799,7 @@ Sada `store` napunimo sa onoliko tokena koliki je njegov početni kapacitet, i p
     checkCount(t, tokenStore.curr, nil, initialCapacity, unexpectedRingCapacity)
 ```
 
-Ovde smo koristili pomoćnu funkciju `filterValid` pri brojanju važećih tokena:
+Ovde smo koristili pomoćnu funkciju `filterValid` pri brojanju važećih tokena, koja izgleda ovako:
 
 ```go
 func filterValid(tr *tokenRing) bool {
@@ -1807,7 +1811,7 @@ func filterValid(tr *tokenRing) bool {
 ```
 Go dopušta slanje funkcija kao parametar, što je veoma, veoma zgodno :smile:
 
-U sledećoj liniji malkice sovimo, da svi tokeni koje smo do sada dodali isteknu, a zatim u nekoliko linija koje slede proveravamo da li se metoda `Fetch()` korektno ponaša. Ako token postoji, ali je istekao, ona ipak treba da vrati korektan `payload`, ali sa greškom:
+U sledećoj liniji malkice knjavamo, da svi tokeni koje smo do sada dodali isteknu, a zatim u nekoliko linija koje slede proveravamo da li se metoda `Fetch()` korektno ponaša. Ako token postoji, ali je istekao, `Fetch()` ipak treba da vrati korektan `payload`, ali sa greškom:
 ```go
     time.Sleep(ttl)
     expiredProbe, err := store.Fetch(token)
@@ -1822,7 +1826,7 @@ U sledećoj liniji malkice sovimo, da svi tokeni koje smo do sada dodali isteknu
         t.Fatal(fmt.Errorf("got unexpected payload: %v:%v", token, expired))
     }
 ```
-Nakon poslednje provere, sada dodajemo novi token i proveravamo da li se Fetch() korektno ponaša kada je token još važeći: 
+Nakon poslednje provere, sada dodajemo novi token i proveravamo da li se Fetch() korektno ponaša i kada je token još važeći: 
 ```go
     key, err := store.Store("another")
     something, err := store.Fetch(key)
@@ -1845,7 +1849,7 @@ Sada proveravamo veličinu naše mape. Za očekivati je da ona ima isti broj ele
     checkCount(t, tokenStore.curr, filterValid, 1, unexpectedCountOfValidEntries)
 ```
 
-Ali muke ovim nisu završene. Sada ćemo dodati izvestan broj novih tokena, da proverimo da li nam je broj važećih tokena očekivan. Osim toga, budući da je sada očekivani broj važećih tokena za 1 veći nego početna dužina pantljičare, proveravamo da li je pantljičara duplirala svoj kapacitet:
+Ali muke za `tokenStore` ovim nisu završene. Sada ćemo dodati izvestan broj novih tokena, da proverimo da li nam je broj važećih tokena očekivan. Osim toga, budući da je sada očekivani broj važećih tokena za 1 veći nego početna dužina pantljičare, proveravamo da li je pantljičara duplirala svoj kapacitet:
 
 ```go
     for i := 0; i < initialCapacity; i++ {
@@ -1858,13 +1862,13 @@ Ali muke ovim nisu završene. Sada ćemo dodati izvestan broj novih tokena, da p
     checkCount(t, tokenStore.curr, nil, 2*initialCapacity, unexpectedRingCapacity)
 ```
 
-Vidimo da prethodni unit test proverava mnogo stvari. Ovo znači da, ako sve ovo prođe na testu, to je dokaz (dobro, ne baš dokaz, ali svakako dobar argument) da je `tokenStore` lepo naučio svoju ulogu, i da ga je moguće koristiti u produkciji...
+Ovim smo završili unit test koji proverava ponašanje `tokenStore`. Videli smo da ovaj unit test proverava mnogo stvari. To znači da, ako sve ovo prođe na testu, to je dokaz (dobro, ne baš dokaz, ali svakako dobar argument) da je `tokenStore` lepo naučio svoju ulogu, i da ga je moguće koristiti u produkciji...
 
 ---
 
-... pod uslovom da se usudimo da ga pustimo u produkciju bez da proverimo da li je `tokenStore` *thread-safe*. 
+... pod uslovom da se usudimo da ga pustimo u produkciju bez provere da li je `tokenStore` *thread-safe*. 
 
-Kad god pišete nešto što bi prema specifikaciji trebalo da bude *thread safe*, napišite unit-test koji baš to proverava. Lansirajte mnogo paralelnih go-rutina koje će nemilosrdno da drndaju vaš kod, i proverite šta se dešava. Nije potrebno da takav test proverava korektnost dobijenih rezultata (takav test smo već napisali), nego samo to da vam ništa neće pući, te da će sve go-rutine da se vrate svom Tvorcu. Ipak, u testu koji ćemo napisati proverićemo da li nam se dužina `tokenRing`-ova uklapa sa brojem poziva metode `Store()`.
+Kad god pišete nešto što bi prema specifikaciji trebalo da bude *thread safe*, napišite unit-test koji baš to proverava. Lansirajte mnogo paralelnih go-rutina koje će nemilosrdno da drndaju vaš kod, i proverite šta se dešava. Nije potrebno da takav test proverava korektnost dobijenih rezultata (takav test smo već napisali), nego samo to da vam ništa neće pući, te da će sve go-rutine da se vrate svom Tvorcu. Ipak, pošto nam ju usput, u testu koji ćemo napisati proverićemo da li nam se dužina `tokenRing`-ova uklapa sa brojem poziva metode `Store()`.
 
 Srećom, ovakve stvari u Go-u su laganica. Unit-test za ovo izgleda ovako:
 
@@ -1897,7 +1901,11 @@ func TestTokenStoreConcurrency(t *testing.T) {
 }
 ```
 
-Ovde smo definisali niz struktura koje nose broj niti (*thread*-ova) koje će zvati `Store()`, kao i očekivanu dužinu pantljičare nakon što sve niti završe svoj posao, radi konačne provere. 
+Ovde smo definisali niz anonimnih struktura koje sadrže broj niti (*thread*-ova) koje će zvati `Store()`, kao i očekivanu dužinu pantljičare nakon što sve niti završe svoj posao, provere radi.
+
+Primetimo još nešto: brojeve iz gornje tabele smo računali napamet, uzimajući u obzir činjenicu da je konstanta `initialCapacity` definisana kao `5`. Ako bi ovu konstantu najednom promenili, ovaj unit-test bi pukao. Strogo gledano, očekivane dužine pantljičara trebalo bi da zavise od ove konstante ako želimo da kod bude korektan, zar ne?
+
+Ipak, ono što nije dopušteno u glavnom kodu, dopušteno je u unit-testovima. Svrha unit-testova nije da prođu za svaku vrednost konstanti koje smo birali, nego da dignu uzbunu kad god im se učini nešto sumnjivo. Ako bi konstantu `initialCapacity` zaista promenili, ovaj test bi pukao, ali to i jeste cilj. To bi bio signal programeru da mu valja ponovo preračunati brojeve iz one tabele, prilagodivši ih novoj brednosti konstante `initialCapacity`.
 
 Vidimo da ovde glavni posao radi funkcija `testTokenStoreConcurrency()` koja izgleda ovako (disekcija sledi):
 
@@ -1938,17 +1946,17 @@ func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
 }
 ```
 
-Nakon što smo kreirali instancu interfejsa `Store()` i izlili je u `tokenStore`, kreirali smo promenljivu `wg` tipa `sync.WaitGroup`.
+Nakon što smo kreirali instancu interfejsa `Store()` i izlili je u `tokenStore` na poznat način, kreirali smo promenljivu `wg` tipa `sync.WaitGroup`:
 ```go
     var wg sync.WaitGroup
 ```
-Promenljive ovog tipa su jako korisne kada treba ispitati da li su se sve go-rutine vratile. Kad god lansiramo neku go-rutinu, neposredno pre toga pozovemo `wg.Add(1)`. Kada lansiramo sve go-rutine koje smo nameravali lansirati, jednostavno pozovemo `wg.Wait()`. Ovaj poziv je blokirajući, i čekaće da sve go-rutine izađu.
+Promenljive ovog tipa su jako korisne kada treba brojati da li su se sve lansirane go-rutine vratile. Kad god lansiramo neku go-rutinu, neposredno pre toga pozovemo `wg.Add(1)`. Jednom kad lansiramo sve go-rutine koje smo nameravali lansirati, jednostavno pozovemo `wg.Wait()`. Ovaj poziv je blokirajući, što znači da će čekati da se sve go-rutine vrate.
 
-E sad, kako `wg` zna da je neka go-rutina izašla? 
+E sad, kako `wg` zna da se neka go-rutina vratila? 
 
-Ovo valja isprogramirati. Srećom, prosto je kao pasulj: kad god go-rutina završi svoj posao i izađe, ona treba da pozove `wg.Done()`. Poziv `wg.Wait()` će čekati sve dok sve go-rutine ne overe svoj izlazak sa `wg.Done()`. Prosto, zar ne?
+Ovo valja malkice isprogramirati. Srećom, prosto je kao pasulj: kad god go-rutina završi svoj posao i želi da izađe, ona samo zivne `wg.Done()`. Ovo znači da će `wg.Wait()` čekati sve dok sve go-rutine ne overe svoj izlazak sa `wg.Done()`. Prosto, zar ne?
 
-Budući da je `wg.Wait()` blokirajući, ovaj poziv valja zaštititi tajmerom. U tu svrhu služi pomoćna funkcija `isDoneWithinTimeout()` koja izgleda ovako:
+Budući da je `wg.Wait()` blokirajući, i ovaj poziv nam valja zaštititi tajmerom. U tu svrhu služi pomoćna funkcija `isDoneWithinTimeout()` koja izgleda ovako:
 
 ```go
 func isDoneWithinTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
@@ -1967,7 +1975,7 @@ func isDoneWithinTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 ```
 Funkcija vraća `true` ukoliko se sve završilo u predviđenom roku, inače vraća `false`. 
 
-Kad ovo znamo, ostatak koda je prostoća. Prvo deklarišemo dve anonimne funkcije koje će zvati `Store()` i `Fetch()` slučajno, a koje neće zaboraviti da markiraju izlazak sa `wg.Done()`:
+Kad ovo znamo, ostatak je prostoća. Prvo deklarišemo dve anonimne funkcije koje će zvati `Store()` i `Fetch()` slučajno, ali koje neće zaboraviti da markiraju svoj izlazak sa `wg.Done()`:
 
 ```go
     storeWrapper := func(wg *sync.WaitGroup) {
@@ -1988,7 +1996,7 @@ Kad ovo znamo, ostatak koda je prostoća. Prvo deklarišemo dve anonimne funkcij
     }
 ```
 
-Sada lansiramo go-rutine u petlji:
+Sada lansiramo go-rutine u petlji...
 ```go
     for i := 0; i < volume; i++ {
         wg.Add(1)
@@ -1997,7 +2005,7 @@ Sada lansiramo go-rutine u petlji:
         go fetchWrapper(&wg)
     }
 ```
-Na kraju, proveravamo da li su se sve go-rutine vratile u predviđenom vremenu:
+... pa proverimo da li su se sve go-rutine vratile u predviđenom vremenu:
 ```go
     ok := isDoneWithinTimeout(&wg, ttl)
     if !ok {
@@ -2005,7 +2013,12 @@ Na kraju, proveravamo da li su se sve go-rutine vratile u predviđenom vremenu:
     }
 ```
 
-Ako bismo sada izvršili sve unit-testove koje smo do sada napisali, dobili bismo sledeći output:
+Na kraju proverimo da li nam je dužina pantljičare očekivana sa datu količinu poziva metode `Store()`:
+```go
+checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
+```
+
+Ovim smo završili junit-testove koje smo nameravali napisati. Ako bismo ih sada sve izvršili, dobili bismo sledeći output:
 
 ```
 $ go test -v
@@ -2039,20 +2052,18 @@ PASS
 ok  	github.com/ogou/token	0.672s
 ```
 
-###  I za kraj...
+###  I za kraj... `main.main()`
 
-Da bi ilustrovali još neke tehnike u Go-u, ovaj repo sadrži jednostavan HTTP-serverčić koji dozovljava da se igramo onim što smo do sada napisali.
+Da bi ilustrovali kako se pišu izvršni programi, ovaj repo sadrži jednostavan HTTP-serverčić koji dozovljava da se igramo onim što smo do sada napisali.
 
-Nećemo disecirati ovaj program. Recimo samo to da se kod nalazi `main` paketu kojeg možete pogledati [ovde](github.com/gordost/ogou/main/main.go)
+Nećemo disecirati ovaj program. Reći ćemo samo to da se kod za ovo nalazi `main` paketu kojeg možete pogledati [ovde](github.com/gordost/ogou/main/main.go)
 
 Uputstvo kako da izgradite izvršni program se nalazi [ovde](github.com/gordost/ogou/main/README.md)
 
 
----
+###  Šta dalje?
 
-###  Kuda dalje?
-
-Ovim smo završili ono što smo ovde za sada nameravali implementirati, ali šta dalje? Drugim rečima, šta je to što može da nam zafali? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira. Svaki *Pull Request* ću rado pregledati, i, ako je OK, prihvatiti u ovom repu.
+Ovim smo završili ono što smo ovde nameravali implementirati, ali šta dalje? Drugim rečima, šta je to što ovde nema, a može da nam zafali? Ako čitalac ima vremena i volje, mogao bi da proba nešto od toga i sam da implementira i napravi *Pull Request*.
 
 ##### Različiti TTL-ovi
 
@@ -2065,11 +2076,11 @@ Ma koliko efikasan ovaj algoritam naizgled bio, upada u oči da on potpuno zavis
     }
 ```
 
-Na ovaj način, `StoreWithTTL` bi se i dalje ponašao kao `Store` sa standardnim TTL-om kad god zovemo stare metode, ali bi imao funkciju koja zadaje TTL koji moguće nije standardan.
+Primetimo sintaksu: na ovaj način, `StoreWithTTL` bi se i dalje ponašao kao `Store`, ali bi imao funkciju koja a neke tokene zadaje TTL koji moguće nije standardan.
 
 ---
 
-Ovo ne bi trebalo biti mnogo teško napraviti, a ipak zadržati efikasnost algoritma iz `TokenStore`. Kao prvo, koliko različitih TTL-ova ćemo ikada imati? U praksi, obično se barata sa samo nekoliko različitih vrednosti TTL-a: super kratki (nekoliko sekundi), malkice duži (nekoliko minuta), još duži (nekoliko sati), pa onda nekoliko dana, nedelja, meseci i tako dalje. U svakom slučaju, teško je zamislivo da ćemo ikada baratati sa TTL-ovima čije se vrednosti prostiru na više od, lupam, par stotina različitih. Ovo znači da i dalje možemo tokene držati u jednoj mapi, ali da umesto jednog `tokenRing`-a možemo imati mapu `tokenRing`-ova za različite TTL-ove:
+Ovo ne bi trebalo biti mnogo teško napraviti, a ipak zadržati efikasnost algoritma iz `tokenStore`. Kao prvo, koliko različitih TTL-ova ćemo ikada imati? U praksi, obično se barata sa samo nekoliko različitih vrednosti TTL-a: super kratki (nekoliko sekundi), malkice duži (nekoliko minuta), još duži (nekoliko sati), pa onda nekoliko dana, nedelja, meseci i tako dalje. U svakom slučaju, teško je zamislivo da ćemo ikada baratati sa TTL-ovima čije se vrednosti prostiru na više od, lupam, par stotina različitih. Ovo znači da i dalje možemo tokene držati u jednoj mapi, ali da umesto jednog `tokenRing`-a možemo imati mapu `tokenRing`-ova za različite TTL-ove:
 
 ```go
     var tokenRingMap map[time.Duration]*tokenRing

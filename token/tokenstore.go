@@ -28,13 +28,13 @@ type TokenStore struct {
 	tokenRingFactory *tokenRingFactory
 }
 
-func (mem *TokenStore) Store(payload interface{}) (string, error) {
-	envelope := envelope{payload, time.Now(), mem.ttl}
-	return mem.store(&envelope)
+func (ts *TokenStore) Store(payload interface{}) (string, error) {
+	envelope := envelope{payload, time.Now(), ts.ttl}
+	return ts.store(&envelope)
 }
 
-func (mem *TokenStore) Fetch(token string) (interface{}, error) {
-	envelopeProbe, err := mem.syncedMapStore.Fetch(token)
+func (ts *TokenStore) Fetch(token string) (interface{}, error) {
+	envelopeProbe, err := ts.syncedMapStore.Fetch(token)
 	if err != nil {
 		return nil, err
 	}
@@ -48,38 +48,38 @@ func (mem *TokenStore) Fetch(token string) (interface{}, error) {
 	return envelope.payload, nil
 }
 
-func (mem *TokenStore) Enum(callback func(string, interface{}, bool, time.Duration)) {
-	mem.mu.Lock()
-	defer mem.mu.Unlock()
-	for token, envelopeProbe := range mem.mapstore {
+func (ts *TokenStore) Enum(callback func(string, interface{}, bool, time.Duration)) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	for token, envelopeProbe := range ts.mapstore {
 		envelope, _ := envelopeProbe.(envelope)
 		callback(token, envelope.payload, !envelope.expired(), time.Since(envelope.created.Add(envelope.ttl)))
 	}
 }
 
-func (mem *TokenStore) store(envelope *envelope) (string, error) {
-	token, err := mem.syncedMapStore.Store(*envelope)
+func (ts *TokenStore) store(envelope *envelope) (string, error) {
+	token, err := ts.syncedMapStore.Store(*envelope)
 	if err != nil {
 		return "", err
 	}
 	entry := entry{token, envelope}
 	storeAndBudge := func() {
-		mem.curr.entry = &entry
-		mem.prev = mem.curr
-		mem.curr = mem.curr.next
+		ts.curr.entry = &entry
+		ts.prev = ts.curr
+		ts.curr = ts.curr.next
 	}
-	mem.mu.Lock()
-	defer mem.mu.Unlock()
-	if e := mem.curr.entry; e == nil {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	if e := ts.curr.entry; e == nil {
 		storeAndBudge()
 		return token, nil
 	}
-	if e := mem.curr.entry.envelope; e.expired() {
-		delete(mem.mapstore, mem.curr.entry.token)
+	if e := ts.curr.entry.envelope; e.expired() {
+		delete(ts.mapstore, ts.curr.entry.token)
 		storeAndBudge()
 		return token, nil
 	}
-	mem.expandTokenRing()
+	ts.expandTokenRing()
 	storeAndBudge()
 	return token, nil
 }
@@ -104,12 +104,12 @@ type tokenRing struct {
 	entry *entry
 }
 
-func (mem *TokenStore) expandTokenRing() {
-	last := mem.tokenRingFactory.manufacture()
+func (ts *TokenStore) expandTokenRing() {
+	last := ts.tokenRingFactory.manufacture()
 	first := last.next
-	last.next = mem.curr
-	mem.prev.next = first
-	mem.curr = first
+	last.next = ts.curr
+	ts.prev.next = first
+	ts.curr = first
 }
 
 type tokenRingFactory struct {
