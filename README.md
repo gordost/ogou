@@ -452,7 +452,7 @@ Uprkos lepoti ove konstrukcije, nemojte koristiti ovu varijantu `if`-a. Ona pros
 
 Ovo što smo do sada rekli o greškama je primenljivo na sve programske jezike, ali, kada se radi o Go-u, uvek preferirajte stil koji se u jednoj rečenici može opisati sa *brigo moja, pređi na drugoga!* E to je upravo ono što smo uradili u ove tri linije koda :smile: Čim dođe do greške, odmah vrući kesten uvaljujemo onome ko nas je zvao, i zadovoljno peremo ruke. 
                                                                          
-Međutim, nije sve baš tako prosto: *bar na jednom mestu* u vašem programu morate imati nekakvog sakupljača grešaka koji će sa njima nešto da radi. Jedan od najboljih kandidata za to mesto je `main()` u paketu `main`, a to su funkcija i paket koje morate imati ako želite da se vaš program izvrši (ako nigde nemate `main.main()`, vaš program nije program, nego biblioteka). E sad, šta sakupljač grešaka treba pametno sa njima da radi? Logovanje grešaka u fajl je dobra stvar. Ispis grešaka na ekran je takođe dobra stvar. A ako je greška suviše ozbiljna, nije zgoreg ponekad pozvati i `panic()`. Program će na ovaj način završiti u kanalu, ali to je ponekad zaista najbolje. 
+Međutim, nije sve baš tako prosto: *bar na jednom mestu* u vašem programu morate imati nekakvog sakupljača grešaka koji će sa njima nešto da radi. Jedan od najboljih kandidata za to mesto je `main()` u paketu `main`, a to su funkcija i paket koje morate imati ako želite da se vaš program izvrši (ako nigde nemate `main.main()`, vaš program nije program, nego biblioteka). E sad, šta sakupljač grešaka treba pametno sa njima da radi? Logovanje grešaka u fajl je dobra stvar. Ispis grešaka na ekran je takođe dobra stvar. A ako je greška suviše ozbiljna, nije zgoreg ponekad pozvati i `panic()`. Program će na ovaj način završiti u kanalu pored puta, ali to je ponekad zaista najbolje. 
 
 ###### Poređenje sa Javom
 
@@ -497,7 +497,7 @@ Ekvivalent ovog bloka u Go-u je daleko ekonomičniji. Go podstiče na to da se g
     r.use()
     return
 ```
- Primetite upotrebu naredbe `defer`. Ona je kao tempirana bomba koja se aktivira *neposredno pre nego što funkcija efektivno izvrši `return`*. Na ovaj način smo osigurali da će se `r.close()` kad-tad izvršiti, ali ne slepački, kao u Javinom finally-bloku. Jer, ako zbog greške resurs nikada ni ne bude otvoren, `defer` neće ni doći na red jer u tom slučaju neće imati šta ni da se zatvara.
+ Primetite upotrebu naredbe `defer`. Ona je kao tempirana bomba koja se aktivira *neposredno pre nego što funkcija efektivno izvrši `return`*. Na ovaj način smo osigurali da će se `r.close()` kad-tad izvršiti, ali ne slepački, kao u Javinom finally-bloku. Jer, ako zbog greške resurs nikada ni ne bude otvoren, `defer` neće ni doći na red jer u tom slučaju neće imati ni šta da se zatvara.
  
 Drugim rečima, 1:0 za Go na ovom mestu.
 
@@ -516,7 +516,7 @@ U našem slučaju, slajs `buf` sadrži slučajne bajtove na koje ćemo se u petl
 
 ---
 
-I evo ga taj korak: sledeća naredba vraća token, kao i `nil` umesto greške:
+I evo ga taj korak: sledeća naredba vraća token, kao i `nil` jer nije bilo greške:
 
 ```go
     return string(buf), nil
@@ -531,12 +531,12 @@ var tokenLetters = []byte("abc...789")
 
 ---
 
-Stvarno, krajnji je red je da se vratimo na implementaciju interfejsa `Store`, do ne počnemo zaboravljati ono što smo počeli.
+Uh, raspisasmo se. Krajnji je red je da se vratimo na implementaciju interfejsa `Store`, do ne počnemo zaboravljati ono što smo ovde počeli.
 
 
 ###  Prvi pokušaj, a treći pitonizam: pa ovo mu ga dođe kao rečnik/mapa/yebemliga šta je!
 
-Associjativni nizovi se u Pitonu zovu rečnici, u drugim jezicima mape, tabele *and what not*. Asocijativni nizovi su nizovi indeksirani nečim drugim, a ne samo uzastopnim prirodnim brojevima (u kom slučaju se kratko zovu nizovi). Oni postoje u svim programskim jezicima sveta, sa jednom bitnom razlikom. U jezicima poput Pitona i Go-a, asocijativne nizove "priznaje" kompajler, dok u većini drugih jezika kompajler o njima nema pojma, te su tamo asocijativni nizovi implementirani u okiru standardne biblioteke. 
+Associjativni nizovi se u Pitonu zovu rečnici, u drugim jezicima mape, tabele i šta sve ne. Asocijativni nizovi su nizovi indeksirani nečim drugim, a ne samo uzastopnim prirodnim brojevima (u kom slučaju se kratko zovu nizovi). Oni postoje u svim programskim jezicima sveta, sa jednom bitnom razlikom. U jezicima poput Pitona i Go-a, asocijativne nizove "priznaje" kompajler, dok u većini drugih jezika kompajler o njima nema pojma, te su tamo asocijativni nizovi implementirani u okiru standardne biblioteke. 
 
 Na ovom mestu nailazimo na još jednu stvar koja mi je godinama išla na tuki u Javi, a to je da interfejs `Map<K, V>` sa svim svojim implementacijama rakolji u biblioteci, pa ga kompajler zarezuje taman toliko koliko i svaku drugu klasu. Zato, kad vam u Javi zatreba neka statična mapa koja se nikad ne menja (što je, verujte, čest slučaj), valja napisati i kod koji je puni. I kao da to nije dovoljno, taj kod mora da se izvrši pre nego što se bilo šta drugo izvrši. Ukratko, na ovom mestu će vam se Java propisno nayebati keve.
 
@@ -561,7 +561,7 @@ Kako Go priznaje mape već na nivou kompajlera, evo načina da deklarišete i in
     digitNames[6] = "šest"
 ```
  
-Pošto interfejs `Store` veoma podseća na mapu, iskoristićemo ovu sličnost. Stvar je u tome što je u Go-u moguće "nalepiti" svaki interfejs na bilo koji tip. Iako Go nema klase, u Go-u apsolutno sve što postoji može implementirati bilo koji interfejs.
+E sad, pošto interfejs `Store` veoma podseća na mapu, iskoristićemo ovu sličnost. Stvar je u tome što je u Go-u moguće "nalepiti" svaki interfejs na bilo koji tip. Iako Go nema klase, u Go-u apsolutno sve što postoji može implementirati bilo koji interfejs.
 
 Ipak, interfejs `Store` ne možemo direktno nalepiti na Go-ovu mapu `map[string]interface{}`. Ovo je zato što mape pripadaju tuđem, a ne našem paketu, a Go zabranjuje lepljenje metoda na tipove koji nisu vaši. Ipak, ovaj problem skoro da ne postoji. Dovoljno je "usvojiti" ono što nam treba u naš paket, te, poput zle maćehe, pastorčetu raditi što nam je volja:
 
@@ -600,7 +600,7 @@ func (ms mapStore) Fetch(token string) (interface{}, error) {
 }
 ```
 
-Šta se ovde desilo?
+Kaj se ovde zbilo?
 
 Potpis novododatih funkcija se potpuno poklapa sa potpisom metoda iz interfejsa `Store`. Ali, za razliku od metoda iz interfejsa, ovo više nisu pusta obećanja. Ove dve funkcije imaju telo koje stvarno nešto radi. Osim toga, ove funkcije nisu obične funkcije, kao recimo `random()`. Ove funkcije su *metode* jer uključuju **primaoca** (*receiver*-a), što je ovde promenljiva tipa `mapStore` koju smo krstili `ms`:
 
@@ -609,7 +609,7 @@ func (ms mapStore) Store...
 func (ms mapStore) Fetch...
 ```
 
-Na ovom mestu u deklaraciji Go-ovih funkcija se na poznate tipove lepe interfejsi. Da bi kompajler shvatio tip `mapStore` kao nekakav `Store`, obe metode moraju da budu implementirane. Izbrišite bilo koju od njih, i kompajler će opet početi da kmeči.
+Na ovom mestu u deklaraciji Go-ovih funkcija se na poznate tipove lepe interfejsi i obrnuto. Da bi kompajler shvatio tip `mapStore` kao nekakav `Store`, obe metode moraju da budu implementirane. Izbrišite bilo koju od njih, i kompajler će opet početi da kmeči.
 
 Primetite kako se u Go-u radi sa mapama. Budući da je `mapStore` u suštini jedna mapa, kad god želimo nešto ugurati u nju, koristimo pitonijansku sintaksu:
 
@@ -623,7 +623,7 @@ Kod očitavanja iz mape, sintaksa je malkice drugačija nego u Pitonu:
 ```go
     payload, ok := ms[token]
 ```
-Kod očitavanja, Go uvek vraća dve vrednosti. Prva je vrednost koju tražimo, a druga je `bool` koji nam govori o tome da li je vrednost pronađena ili ne. Ovu drugu vrednost potrebno je uvek proveriti, što smo i učinili.
+Kod očitavanja, Go uvek vraća dve vrednosti. Prva je vrednost koju tražimo, a druga je `bool` koji nam govori o tome da li je vrednost pronađena ili ne. Ovu drugu vrednost potrebno je uvek proveriti, što smo ovde i učinili.
 
 U Javi, kompajler ne poznaje čitanje iz mape, pa to činite pozivima biblioteke:
 
@@ -637,7 +637,7 @@ Na kraju, ovako se konzumira ono što smo do sada napisali:
 
 ```go
     store := token.NewMapStore()
-    token, err := store.Store("neki q...")
+    token, err := store.Store("neki q")
     if err != nil {
         panic(err)
     }
@@ -650,7 +650,7 @@ Na kraju, ovako se konzumira ono što smo do sada napisali:
 
 >###### O funkciji `panic()`
 >
->Funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke paniče*. Ili opasni frajeri, ali ovo je daleko ređe. Oni što se nalaze u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako se ipak uspaniče, valja biti frajer i potruditi se negde napraviti `recover()`. U suprotnom, program će odvaliti nosom o ledinu.
+>Funkcija `panic()` se uglavnom koristi u primerima. U pravim programima, *samo πčke paniče*. Ili opasni frajeri, ali čak i oni retko. Oni u sredini ne paniče, nego dužnosno proveravaju greške i vraćaju ih svom pozivaru. A ako se ipak uspaniče, valja se potruditi i negde napraviti `recover()`. U suprotnom, program će vam odvaliti nosom o ledinu.
 >
 >Go ima nešto što liči na Javinu obradu izuzetaka, ali ovo se ređe koristi. Mehanizam je baziran na standardnim `panic()` - `defer()` - `recover()` funkcijama. Ukratko, kad pozovete neku funkciju za koju znate da može da paniči, njenu paniku možete smiriti u nekoj od vaših `defer` funkcija koristeći funkciju `recover()`. Na ovaj način programu se daje šansa da se iščupa bez havarije:
 
@@ -669,7 +669,7 @@ Na kraju, ovako se konzumira ono što smo do sada napisali:
     }
 ```
 >
->Ipak, nije lako naći mesto gde se ovaj mehanizam planski i svesno koristi. Jedno takvo mesto je `json` paket, koji ima potrebu za sintaksnom analizom teksta u JSON formatu. Sintaksni analizatoričari su obično puni rekurzivnih poziva koji ponekad znaju otići u velike dubine. E sad, zamislite situaciju kad na dubini od 1000 metara neka od tih rekurzija prokljuvi da tenkre koji je kreirao JSON nije zatvorio desnu zagradu! Ma ko će sad da se zeza i da korektno isprogramira da svaki od poziva duž *call stack*-a prekine to što radi, i elegantno izađe? Daleko je lakše na tako velikoj dubini dići paniku, a zatim je smiriti `defer` funkcijom iz sigurnosti čamca koji se nalazi na površini.
+>Ipak, nije lako naći mesto gde se ovaj mehanizam planski i svesno koristi. Jedno takvo mesto je `json` paket, koji ima potrebu za sintaksnom analizom teksta u JSON formatu. Sintaksni analizatoričari su obično puni rekurzivnih poziva koji ponekad znaju otići u velike dubine. E sad, zamislite situaciju kad na dubini od 1000 metara neka od tih rekurzija prokljuvi da tenkre koji je kreirao JSON nije zatvorio desnu zagradu! Ma ko će bre sad da se zeza i da korektno isprogramira da svaki od poziva duž *call stack*-a prekine to što radi, i elegantno izađe? Daleko je lakše dići paniku, a zatim istu smiriti `defer` funkcijom iz sigurnosti čamca na površini.
 
 ###### Unit testovi u Go-u
 
@@ -677,7 +677,7 @@ Ekstra je super kad programiranje prema interfejsima podseća na pisanje pozori�
 
 E sad, šta su unit-testovi? Unit teastovi su **audicija** za glumce; ulogu nećete dati glumcima koji ne prođu audiciju, zar ne? Vrlo je važno da glumce podvrgnete nekakvim izazovima, da bi proverili da li su zaista naučili svoju ulogu, kao i da li je igraju dovoljno dobro. U praksi, kôd nekog programa često menjate i ispravljate, pa vam unit-testovi dođu kao nekakava sigurnosna mreža, proveravajući da li su vaše poslednje izmene nešto syebale.
 
-Za osveženje, Go "priznaje" unit-testove na nivou kompajlera: naredba `go test -v` će izvršiti sve unit testove nađene u direktorijumu (to jest paketu) u kojem ste, i proizvesti nekakav output. E sad, ostaje pitanje: a šta je to što Go smatra unit-testom?
+Za osveženje, a za razliku od Javašluka, Go "priznaje" unit-testove na nivou kompajlera: naredba `go test -v` će izvršiti sve unit testove nađene u direktorijumu (to jest paketu) u kojem ste, i proizvesti nekakav output. E sad, ostaje pitanje: a šta je to što Go smatra unit-testom?
 
 Za Go, unit-testovi su **funkcije** koje se vrzmaju po fajlovima imenovanim po mustri `*_test.go`. Osim toga, imena takvih funkcija moraju početi rečju `Test` (primetite veliko slovo), i te funkcije moraju primati tačno jedan parametar koji mora biti tipa `*testing.T`. Na primer:
 
@@ -759,7 +759,7 @@ Ako sada izvršimo test, greška će odmah biti uhvaćena, što znači da je `ma
 
 ---
 
-Iako `mapStore` na prvi pogled izgleda bezgrešno, budući smo prinuđeni da mu namerno ušpricavamo grešan kod da bi demonstrirali kako unit-testovi otkrivaju bagove, ovo uopšte nije tačno. Sa samo nekoliko linija koda moguće je napisati unit-test koji će pocepati `mapStore` k'o svinja masan džak:
+Iako `mapStore` na prvi pogled izgleda bezgrešno, budući smo prinuđeni da mu namerno ušpricavamo grešan kod da bi demonstrirali kako unit-testovi otkrivaju bagove, ovo uopšte nije tačno. Sa samo nekoliko linija koda moguće je napisati unit-test koji će ga pocepati k'o svinja mas'an džak:
 
 ```go
 func TestMapStoreFails(t *testing.T) {
@@ -770,7 +770,7 @@ func TestMapStoreFails(t *testing.T) {
 }
 ```
 
-Sad kad izvršimo ove testove, dobijamo pičvajz:
+Sad kad izvršimo ovaj test, nastaje pičvajz:
 
 ```shell
     $ go test -v
@@ -788,7 +788,7 @@ Sad kad izvršimo ove testove, dobijamo pičvajz:
     FAIL    github.com/aboutgo/token    0.030s    
 ```
 
-Koren problema je u tome što `mapStore` nije *thread-safe*. Zamislite barmena u nekom baru koji, čim mu neki gost poviče "pivo", a on odmah, kao robot, slepo stavlja novu kriglu na punjenje, ne vodeći pri tom računa da li se tamo već nalazi neka druga krigla koja je već na punjenju. Na podu će neminovno biti mnogo srče, zar ne?
+Koren problema je u tome što `mapStore` nije *thread-safe*. Zamislite barmena u nekom baru koji, čim mu neki gost poviče "pivo", a on odmah, kao robot, slepo stavlja novu kriglu na punjenje, ne vodeći pri tom računa da li se tamo već nalazi neka druga krigla koja je već na punjenju. Na podu će neminovno biti mnogo srče i prosutog piva, zar ne?
 
 ---
 
@@ -796,7 +796,7 @@ Posmatrajmo naredbu
 ```go
     go testStoreFetch(t, store)
 ```
-Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova naredba se izvršava u petlji tačno 100 puta. Svaki put kada se ona izvrši, `Go` lansira novu nit (*thread*) u kojoj se izvršava funkcija `testStoreFetch`. Međutim, odmah zatim, ne čekajući da se prva nit završi, lansira se još jedna ista takva nit, pa još jedna, pa još jedna... i tako 100 puta. Na kraju petlje će biti kao da smo pustili roj od 100 niti od kojih svaka izvršava jednu te istu funkciju u nekakvom isprepletanom kompjuterskom vrememnu. Na kraju petlje čekamo jednu desetinku sekunde, da nitima iz roja damo dovoljno vremena da naprave karambol i... ka-boom!
+Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova naredba se izvršava u petlji tačno 100 puta. Svaki put kada se ona izvrši, `Go` lansira novu nit (*thread*) u kojoj se izvršava funkcija `testStoreFetch`. Međutim, odmah zatim, ne čekajući da se prva nit završi, lansira se još jedna ista takva nit, pa još jedna, pa još jedna... i tako 100 puta. Na kraju petlje će biti kao da smo pustili roj od 100 niti od kojih svaka izvršava jednu te istu funkciju pozvanu sa različitim parametirma u nekakvom isprepletanom kompjuterskom vrememnu. Na kraju petlje čekamo jednu desetinku sekunde, da nitima iz roja damo dovoljno vremena da naprave karambol i... :boom:
 
 Stvar je u tome što je mapa jedna jedina, a niti/*thread*-ova ima brate 100 komada. I taman kada jedna nit počne u nju nešto da piše, ona biva na pola posla prekinuta jer neka druga nit isto tako pokušava da tamo nešto piše. Ovo dovodi do *fatal error: concurrent map writes*, što izveštaj unit-testa potvrđuje.
 
