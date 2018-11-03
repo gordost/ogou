@@ -3,13 +3,13 @@ package token
 import "sync"
 
 func NewSyncedMapStore() Store {
-	mu := sync.Mutex{}
+	mu := sync.RWMutex{}
 	return syncedMapStore{mapstore: mapStore{}, mu: &mu}
 }
 
 type syncedMapStore struct {
 	mapstore mapStore
-	mu       *sync.Mutex
+	mu       *sync.RWMutex
 }
 
 func (sms syncedMapStore) Store(payload interface{}) (string, error) {
@@ -19,7 +19,7 @@ func (sms syncedMapStore) Store(payload interface{}) (string, error) {
 }
 
 func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
-	sms.mu.Lock()
-	defer sms.mu.Unlock()
+	sms.mu.RLock()
+	defer sms.mu.RUnlock()
 	return sms.mapstore.Fetch(token)
 }

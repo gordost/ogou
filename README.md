@@ -800,7 +800,7 @@ Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova nar
 
 Stvar je u tome što je mapa jedna jedina, a niti/*thread*-ova ima brate 100 komada. I taman kada jedna nit počne u nju nešto da piše, ona biva na pola posla prekinuta jer neka druga nit isto tako pokušava da tamo nešto piše. Ovo dovodi do *fatal error: concurrent map writes*, što izveštaj unit-testa potvrđuje.
 
-U Javi, ovo se lako rešava tako što tamo postoji nešto što se zove `ConcurrentMap`, to jest mapa koja obećava da je *thread-safe*. *Thread-safe* znači da mapa implementira nešto nalik na semafor: samo jedna nit biva puštena da uđe u "kritičnu zonu", dok sve ostale čekaju na crveno dok ona prva ne obavi svoj posao i izađe. E sad: u Go-u, koliko je meni poznato, osim kanala (*channels*) nema ništa što je samo po sebi *thread-safe*. Međutim, jezičke konstrukcije namenjene paralelnom programiranju u Go-u su toliko razgovetne da se ja lično, što se paralelnog programiranja tiče, mnogo komfornije osećam u Go-u nakon samo mesec dana iskustva nego što sam se ikada osećao u Javi.
+U Javi, ovo se lako rešava tako što tamo postoji nešto što se zove `ConcurrentMap`, to jest mapa koja obećava da je *thread-safe*. *Thread-safe* znači da mapa implementira nešto nalik na semafor: samo jedna nit biva puštena da uđe u "kritičnu zonu", dok sve ostale čekaju na crveno dok ona prva ne obavi svoj posao i izađe. E sad: u Go-u, koliko je meni poznato, osim kanala (*channels*), skoro da nema ništa što je samo po sebi *thread-safe*. Međutim, jezičke konstrukcije namenjene paralelnom programiranju u Go-u su toliko razgovetne da se ja lično, što se paralelnog programiranja tiče, mnogo komfornije osećam u Go-u nakon samo mesec dana iskustva nego što sam se ikada osećao u Javi.
 
 ###  Drugi pokušaj: `SyncedMapStore`
 
@@ -964,7 +964,41 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
 }
 ```
 
-Ovoig puta naš unit-test će da prođe. Primetimo da će i u ovom slučaju dolaziti do kopiranja `syncedMapStore`-a kad god pozovemo neku od njenih metoda, ali će te kopije sadržati dva pointera koji pokazuju na istu stvar kao i originali. Zato je pointerka implementacija cele stvari možda ipak čistija. Ako ništa, kopiranje košta nešto, a brže je kopirati jedan pointer nego dva, zar ne? 
+Ovog puta naš unit-test će da prođe. Primetimo da će i u ovom slučaju dolaziti do kopiranja `syncedMapStore`-a kad god pozovemo neku od njenih metoda, ali će te kopije sadržati dva pointera koji pokazuju na istu stvar kao i originali. Zato je pointerka implementacija cele stvari možda ipak čistija. Ako ništa, kopiranje košta nešto, a brže je kopirati jedan pointer nego dva, zar ne? 
+
+###### Fino brušenje
+
+Iako `syncedMapStore` je sada na prvi pogled do jaja, ovde se postavlja jedno klasično programersko pitanje: koliko je zaključavanje muteksa implementirano gore **u stvari** efikasno?
+
+Stvar je u tome što će različite niti (*thread*-ovi) zvati `Fetch()` i `Store()` u poretku koji je za nas nepoznat. Zamislite sada da imate 1000 istovremenih poziva metode `Fetch()`, a nijedan `Store()`. Prema algoritmu gore, svih ovih 1000 poziva će se nagurati u red ispred muteksa, sprečavajući jedan drugog da se dešavaju istovremeno. Međutim, budući da `Fetch()` uopšte ne mutira mapu, činjenica je da ništa ne bi smetalo ni da se ovi pozivi *ipak* dešavaju isotovremeno. Mape u Go-u, kao i mnogo čega drugog, ionako su *thread-safe* kada se radi samo o čitanju. Zato jedino što stoji na putu ovom potencijalnom paralelizmu jeste bahatost našeg algoritma gore, i ništa više.
+
+Stvar se drastično menja kada se u priču uključi `Store()`: ova metoda mutira mapu, i to je ono što uopšte generiše potrebu za zaključavanjem muteksa. Bez nje, muteks ne bi ni morali zaključavati. Nameće se pitanje: kako izvesti da `Fetch()`-ovi jedan drugom ne smetaju, ali da, čim naiđe `Store()`, da se muteks ipak zaključa?
+
+Za ovo u Go-u služi jedna varijanta muteksa koja se zove `*sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje ne sprečavaju čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks, ali zato sprečavaju pisce. Što se pisaca tiče, oni će ionako koristiti metode `Lock()` i `Unlock()` kao ranije, sprečavajući sve živo da prođe muteks osim sebe samih. Sad kad ovo znamo, prostakluk je poboljšati algoritam da bude daleko efikasniji na čitanju:
+
+```go
+func NewSyncedMapStore() Store {
+    mu := sync.RWMutex{}
+    return syncedMapStore{mapstore: mapStore{}, mu: &mu}
+}
+
+type syncedMapStore struct {
+    mapstore mapStore
+    mu       *sync.RWMutex
+}
+
+func (sms syncedMapStore) Store(payload interface{}) (string, error) {
+    sms.mu.Lock()
+    defer sms.mu.Unlock()
+    return sms.mapstore.Store(payload)
+}
+
+func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
+    sms.mu.RLock()
+    defer sms.mu.RUnlock()
+    return sms.mapstore.Fetch(token)
+}
+```
 
 ###  Kanali (*channels*) i komunikacija između go-rutina
 

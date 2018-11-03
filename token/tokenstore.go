@@ -12,7 +12,7 @@ func NewTokenStore(ttl time.Duration, initialCapacity int) Store {
 	if initialCapacity <= 1 {
 		initialCapacity = defaultInitialCapacity
 	}
-	mu := sync.Mutex{}
+	mu := sync.RWMutex{}
 	syncedMapStore := syncedMapStore{mapStore{}, &mu}
 	factory := newTokenRingFactory(initialCapacity)
 	prev := factory.manufacture()
