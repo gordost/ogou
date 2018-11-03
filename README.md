@@ -1964,32 +1964,32 @@ Vidimo da ovde glavni posao radi funkcija `testTokenStoreConcurrency()` koja izg
 
 ```go
 func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
-	store := NewTokenStore(ttl, initialCapacity)
-	mem, _ := store.(*TokenStore)
-	var wg sync.WaitGroup
-	storeWrapper := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		random, _ := random()
-		store.Store(random)
-	}
-	fetchWrapper := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		random, _ := random()
-		store.Fetch(random)
-	}
-	start := time.Now()
-	for i := 0; i < volume; i++ {
-		wg.Add(1)
-		go storeWrapper(&wg)
-		wg.Add(1)
-		go fetchWrapper(&wg)
-	}
-	ok := isDoneWithinTimeout(&wg, ttl)
-	if !ok {
-		t.Fatal("no all go routines finished within timeout")
-	}
-	checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
-	t.Logf("Stress test elapsed time: %v", time.Since(start))
+    store := NewTokenStore(ttl, initialCapacity)
+    mem, _ := store.(*TokenStore)
+    var wg sync.WaitGroup
+    storeWrapper := func(wg *sync.WaitGroup) {
+        defer wg.Done()
+        random, _ := random()
+        store.Store(random)
+    }
+    fetchWrapper := func(wg *sync.WaitGroup) {
+        defer wg.Done()
+        random, _ := random()
+        store.Fetch(random)
+    }
+    start := time.Now()
+    for i := 0; i < volume; i++ {
+        wg.Add(1)
+        go storeWrapper(&wg)
+        wg.Add(1)
+        go fetchWrapper(&wg)
+    }
+    ok := isDoneWithinTimeout(&wg, ttl)
+    if !ok {
+        t.Fatal("no all go routines finished within timeout")
+    }
+    checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
+    t.Logf("Stress test elapsed time: %v", time.Since(start))
 }
 ```
 Šta se ovde dešava?
@@ -2026,16 +2026,16 @@ Funkcija vraća `true` ukoliko je wg odblokirao u predviđenom roku. U suprotnom
 Kad ovo znamo, ostatak je prostakluk. Prvo deklarišemo dve anonimne funkcije koje će generisati slučajne pozive metoda `Store()` i `Fetch()`, ali koje neće zaboraviti da se razduže pozivajući `wg.Done()` na kraju:
 
 ```go
-	storeWrapper := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		random, _ := random()
-		store.Store(random)
-	}
-	fetchWrapper := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		random, _ := random()
-		store.Fetch(random)
-	}
+    storeWrapper := func(wg *sync.WaitGroup) {
+        defer wg.Done()
+        random, _ := random()
+        store.Store(random)
+    }
+    fetchWrapper := func(wg *sync.WaitGroup) {
+        defer wg.Done()
+        random, _ := random()
+        store.Fetch(random)
+    }
 ```
 
 Sada lansiramo go-rutine u petlji...
