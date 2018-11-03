@@ -13,7 +13,7 @@ func testStoreFetch(t *testing.T, store Store) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	payload, _ := store.Fetch(token)
+	payload, err := store.Fetch(token)
 	if err != nil {
 		t.Fatal(err)
 	}
