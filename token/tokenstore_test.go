@@ -118,18 +118,12 @@ func testTokenStoreConcurrency(t *testing.T, volume int, expected int) {
 	var wg sync.WaitGroup
 	storeWrapper := func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		random, err := random()
-		if err != nil {
-			t.Fatal(err)
-		}
+		random, _ := random()
 		store.Store(random)
 	}
 	fetchWrapper := func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		random, err := random()
-		if err != nil {
-			t.Fatal(err)
-		}
+		random, _ := random()
 		store.Fetch(random)
 	}
 	start := time.Now()
