@@ -974,7 +974,7 @@ Stvar je u tome što će različite niti (*thread*-ovi) zvati `Fetch()` i `Store
 
 Stvar se drastično menja kada se u priču uključi `Store()`: ova metoda mutira mapu, i to je ono što uopšte generiše potrebu za zaključavanjem muteksa. Bez nje, muteks ne bi ni morali zaključavati. `Fetch()`-ovi su ovce, a `Store()`je vuk: ništa ne smeta pustiti 1000 ovaca istovremeno u tor. Ali čim naiđe vuk, njega valja pustiti samo ako u toru nema nijedne ovce, da ne bi neku od njih pojeo. Isto tako, ne valja u tor istovremeno pustiti ni dva vuka, da se ne bi međusobno poklali. E sad: kako izvesti da `Fetch()`-ovi jedan drugom ne smetaju, ali da, čim naiđe `Store()`, da se naš muteks ipak zaključa?
 
-Za ovo u Go-u služi jedna varijanta muteksa koja se zove `*sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje ne sprečavaju druge čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks. Međutim, `RLock()` sprečava pisce: što se njih tiče, oni će ionako koristiti stare metode `Lock()` i `Unlock()`, sprečavajući sve živo da prođe muteks osim sebe samih. Sad kad ovo znamo, prostakluk je poboljšati algoritam da bude daleko efikasniji na čitanju:
+Za ovo u Go-u služi jedna varijanta muteksa koja se zove `sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje ne sprečavaju druge čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks. Međutim, `RLock()` sprečava pisce: što se njih tiče, oni će ionako koristiti stare metode `Lock()` i `Unlock()`, sprečavajući sve živo da prođe muteks osim sebe samih. Sad kad ovo znamo, prostakluk je poboljšati algoritam da bude daleko efikasniji na čitanju:
 
 ```go
 func NewSyncedMapStore() Store {
@@ -1000,7 +1000,7 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
 }
 ```
 
-Novi algoritam je efikasniji zato što i dalje uključuje moranje, dos su sva nemoranja eliminisana.
+Novi algoritam je efikasniji zato što i dalje uključuje moranje, dok su sva nemoranja mudro eliminisana.
 
 ###  Kanali (*channels*) i komunikacija između go-rutina
 
@@ -1044,7 +1044,7 @@ Vreme ispod jedne sekunde uopšte nije loše za sabiranje tolike količine broje
 
 Ipak, na pravom smo putu. Najbolje je da ova tri poziva pokrenemo kao 3 paralelne go-rutine koje bi se izvršavale istovremeno. Ukupno vreme rada će ostati isto, ali, zbog paralelizma, vreme čekanja na rezultat biće svedeno otprilike na trećinu. Trojica radnika iskopaju kanal za trećinu vremena nego što bi to uradio jedan radnik, zar ne?
 
-Međutim naša funkcija `sum()`, takva kakva je, potpuno je nepogodna za tako nešto. Ona vraća rezultat kao izlaznu vrednost, i tu vrednost je sposobna da vrati samo pozivaču iz iste niti u kojoj je i ona sama. Mi i dalje možemo postići da se pozivi `sum()`-a izvršavaju u paralelnim nitima, ali ti pozivi bi se ponašali kao tri balona napunjena helijumom. Jednom pušteni, oni ne bi imali nikakvu komunikaciju sa zemljom, niti bi ih mi mogli na ikoji način kontrolisati.
+Međutim, naša funkcija `sum()`, takva kakva je, potpuno je nepogodna za tako nešto. Ona vraća rezultat kao izlaznu vrednost, i tu vrednost je sposobna da vrati samo pozivaru iz iste niti u kojoj je i ona sama. Mi i dalje možemo postići da se pozivi `sum()`-a izvršavaju u paralelnim nitima, ali ti pozivi bi se ponašali kao tri balona napunjena helijumom. Jednom pušteni, oni ne bi imali nikakvu komunikaciju sa zemljom, niti bi ih mi mogli na ikoji način kontrolisati.
 
 Probajmo zato nešto skroz blesavo. Go dopušta bezimene (unutrašnje) funkcije koje možete izvući "kano ljute guje iz njedara" (*closures*), a koje imaju direktan pristup lokalnim promenljivima deklarisanim u glavnoj niti. Ako bi lansirali jednu takvu funkciju u 3 različite niti, interesantno je pitanje kakav će biti rezultat:
 
@@ -1067,7 +1067,7 @@ Probajmo zato nešto skroz blesavo. Go dopušta bezimene (unutrašnje) funkcije 
     elapsed := time.Since(start)
     fmt.Println(s, elapsed)
 ```
-Anonimna funkcija koju držimo u promenljivoj `suma` dodaje brojeve onako kako joj nailaze direktno na `s`. Osim toga, ona inkrementira `doneCounter` čim završi veliko sabiranje. Glavna nit čeka da sve tri go-rutine završe posao u petlji, proveravajući da li je promenljiva `doneCounter` dostigla potrebnu vrednost, i tek onda štampa rezultat. 
+Anonimna funkcija koju držimo u promenljivoj `suma` dodaje brojeve onako kako nailaze direktno na `s`. Osim toga, ona inkrementira `doneCounter` čim završi veliko sabiranje. Glavna nit čeka da sve tri go-rutine završe posao u petlji, dremajući malkice ako mora, ali stalno proveravajući da li je promenljiva `doneCounter` dostigla potrebnu vrednost. A kad je bude dostigla, glavna nit štampa rezultat. 
 
 Ipak, rezultat koda gore je katastrofa:
 
@@ -1075,9 +1075,9 @@ Ipak, rezultat koda gore je katastrofa:
     1557301230835831450 2.169120056s
 ```
 
-Iako se ništa nije zaglavilo, jer je u Go-u sabiranje celobrojnih vrednosti atomska operacija koja se ne može se usred posla prekinuti, ovaj rezultat, kao prvo, uopšte nije tačan. Stvarno, kako to da smo na promenljivu `s` očigledno dodali svih 3 milijarde brojeva, a ipak dobili netačan rezultat?
+Iako se ništa nije zaglavilo (u Go-u je sabiranje celobrojnih vrednosti očigledno atomska operacija koja se ne može se usred posla prekinuti), ovaj rezultat, kao prvo, uopšte nije tačan. Stvarno, kako to da smo na promenljivu `s` očigledno dodali svih 3 milijarde potrebnih brojeva, a ipak dobili netačan rezultat?
 
-Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit A upiše novo `s` bazirano da vrednosti koja je sada već zastarela, ona će da poništi doprinos niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
+Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit kasnije A upiše novo `s` izračunato na osnovu vrednosti koja je sada već zastarela, ona će poništiti doprinos niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
 
 Osim toga, u kodu gore ima jedan veeeeeliki bag. Sve što smo rekli za `s` važi i za `doneCounter`, tako da smo prosto imali sreće da `doneCounter` nije prezupčio na isti način kao `s`. Da se to desilo, uzaludno bi čekali da se ove 3 go-rutine završe. U stvari, one bi se jadne još i završile, samo mi to ne bismo znali. Zato nikada ne inkrementirajte brojeve na ovaj način. Koristite `doneCounter++`, što je u Go-u atomska operacija.
 
@@ -1144,7 +1144,7 @@ Snabdene voki-tokijem ili ne, go-rutine, jednom lansirane, ponašaju se kao puš
 
 #### Naredba `select` 
 
-Da bi ilustrovali poentu, učinićemo našu funkciju `suma` namerno nestašnom, da bi je kasnije ukrotili `select`-naredbom . Recimo da funkcija na početku sa verovatnoćom 0.25 odlučuje da li da spava jednu čitavu sekundu ili ne. Ovako simuliramo nepredvidljivost vremena izvršavanja. U realnom životu, ova nepredvidljivost može nastati zbog nekog upita upućenoj nekoj preopterećenoj bazi podataka, ili zbog nekog pičvajza na mreži, nebitno:
+Da bi ilustrovali poentu, učinićemo našu funkciju `suma` namerno nestašnom, da bi je kasnije ukrotili naredbom `select`. Recimo da funkcija na početku sa verovatnoćom 0.25 odlučuje da li da spava jednu čitavu sekundu ili ne. Ovako simuliramo nepredvidljivost vremena izvršavanja. U realnom životu, ova nepredvidljivost može nastati zbog nekog upita nekoj preopterećenoj bazi podataka, ili zbog nekog pičvajza na mreži, nebitno:
 
 ```go
     rand.Seed(time.Now().UTC().UnixNano())
@@ -1167,9 +1167,9 @@ Verovatnoća da će bar neka rutina da spava ovde je 55/64, što je dosta veliko
     4500000001500000000 1.297851977s
 ```
 
-E sad, zamislimo sada da našim go-rutinama želimo dati samo jednu sekundu za završe čitav posao. A ako ga ne završe, želimo da glavni program liže svoje rane, smatrajući da nema nikakav rezultat. Za ovaj scenario može poslužiti prelepa konstrukcija `select`. Ova konstrukcija je izuzetno razgovetna baš zato što je misaono rekurzivna: stvar se opet svodi - na čitanje sa kanala!
+Rezultat preko jedne sekunde je očekivan, jer je bar jedna od go-rutina donela odluku da spava čitavu jednu sekundu. E sad: zamislimo sada da našim go-rutinama želimo dati rok od samo jedne sekunde za čitav posao. A ako ga ne završe, želimo da glavni program liže ranu, smatrajući da nema nikakav rezultat. Za ovaj scenario može poslužiti prelepa konstrukcija `select`. Ova konstrukcija je tpliko razgovetna baš zato što je na neki način misaono rekurzivna: stvar se opet svodi - na čitanje sa kanala!
 
-Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati kanal kroz koji će nam ona vratiti konačan rezultat: 
+Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati poseban kanal kroz koji će nam ona vratiti konačan rezultat. Primetimo da ova funkcija kreira go-rutine za sabiranje, kao i kanal za komunikaciju sa njima:
 
 ```go
     wait := func (chRes chan int) {
@@ -1198,13 +1198,13 @@ Sada ćemo kreirati kanal koji ćemo predati go-rutini `wait`, a zatim u `select
     }
 ```
 
-Naredba `select` služi za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, do jaja za tajmere. Ona nam vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
+Naredba `select` služi za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, do jaja za tajmere. Ona vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
 
 ---
 
 E sad: u slučaju da se zaista desi tajmout, kakva je sudbina one četiri go-rutine koje smo lansirali?
 
-Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi na njih u tom slučaju zaboravljamo. Zato je bitno pisati go-rutine tako da one što pre završe započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu to što rade šta god da rade, ali ovu tehniku nećemo ovde pokazati, ionako smo se dosta raspisali. Zapamtite, ako propustite da go-rutine isprogramirate tako da završe svoj posao, nakupiće vam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
+Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi smo na njih u tom slučaju zaboravili. Zato je bitno pisati go-rutine tako da one što pre završe započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu da rade šta god da rade, ali ovu tehniku nećemo ovde pokazati; ionako smo se podosta raspisali. Zapamtite, ako propustite da go-rutine isprogramirate tako da završe svoj posao, nakupiće vam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
 
 ___
 ___
@@ -1233,7 +1233,7 @@ type syncedMapStore struct {
 
 Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Ali zato je tu `mapStore`, a sa njim već može da se barata.
 
-Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat kojeg sačuvamo u `mapStore`. Kad kasnije naiđe poziv metode `Fetch`, mi prvo iscimamo mapu da dobijemo koverat. Nakon otavaranja istog, jednostavno vratimo rezultat.
+Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat, a onda **taj koverat** sačuvamo u `mapStore`. Kad kasnije naiđe `Fetch()`, mi prvo iscimamo mapu da na preda koverat, a onda jednostavno vratimo rezultat.
 
 Koverat koji smo opisali izgleda ovako:
 ```go
@@ -1281,7 +1281,7 @@ func NewTokenStore(ttl time.Duration) Store {
 
 To je zato što `tokenStore` već implementira `Store`! Ovo nije lako odmah videti, ali u Go-u, ako strukturu koja implementira neki interfejs ugnezdite na ovaj način u neku drugu strukturu, onda se toj novoj strukturi priznaje da implementira isti interfejs. Zgodno, zar ne?
 
-Ipak, mi ovde moramo prejahati obe metode, zbog potrebe pakovanja i raspakivanja koverti, a koju nismo imali ranije:
+Ipak, mi ovde moramo prejahati obe metode, zbog potrebe pakovanja i raspakivanja koverti koju nismo ranije imali:
 
 ```go
 func (ts *tokenStore) Store(payload interface{}) (string, error) {
@@ -1311,7 +1311,7 @@ U kodu gore nema mnogo toga novog, tako da nećemo potrošiti previše vremena n
     return ts.syncedMapStore.Store(&envelope)
 ```
 
-Ovako se u Go-u poziva metoda ugnježdene strukture (u našem slučaju `syncedMapStore`) bez opasnosti da uđemo u neželjnu rekurziju, ali ovo se ne koristi baš često. Za razumevanje Go-a, važnije je reći nešto o sledećoj liniji: 
+Ovako se u Go-u poziva metoda ugnježdene strukture (u našem slučaju `syncedMapStore`) bez opasnosti da uđemo u neželjnu rekurziju. Ipak, ovo se ne koristi previše često. Za razumevanje Go-a, važnije je reći nešto o sledećoj liniji: 
 
 ```go
     envelope, ok := envelopeProbe.(envelope)
@@ -1319,7 +1319,7 @@ Ovako se u Go-u poziva metoda ugnježdene strukture (u našem slučaju `syncedMa
 
 Hmmm... ovo je čudno. I liči na nešto poznato, a i ne liči :unamused:
 
-Možda malo buni to što je identifikator `envelope` koji se nalazi krajnje levo, i identifikator `envelope` krajnje desno - dve različite stvari. Onaj levo je ime promenljive `envelope`, a desno - ime tipa `envelope`, što je naša struktura gore. Za Go, ovde nema zabune; Go poznaje kontekst u kojem se ova dva doslovce jednaka identifikatora koriste, pa zna da ih razlikuje. Ali za ljude kojima je Go nov jezik, ovo može biti problem. Zato prekrstimo ime promenljive u nešto drugo, i pokušajmo pogoditi šta ova konstrukcija radi:
+Možda malkice buni to što su identifikator `envelope` koji se nalazi krajnje levo, i identifikator `envelope` krajnje desno - dve različite stvari! Onaj levo je ime promenljive `envelope`, a desno - ime tipa `envelope`, što je naša struktura gore. Za Go, ovde nema zabune; Go poznaje kontekst u kojem se ova dva doslovce jednaka identifikatora koriste, pa zna da ih razlikuje. Ali za ljude kojima je Go nov jezik, ovo može biti problem. Zato prekrstimo ime promenljive u nešto drugo, i pokušajmo pogoditi šta ova konstrukcija radi:
 
 ```go
     env, ok := envelopeProbe.(envelope)
@@ -1369,9 +1369,9 @@ Kompletnosti radi, u Go-u, prolaz kroz neku mapu se vrši ovako:
         ...
     }
 ```
-U našem slučaju, ako bi prolazili kroz našu mapu na ovaj način, to bi valjalo činiti iza zaključanog muteksa dok gomila drugih niti (*thread*-ova) moguće čeka na upis ili čitanje. Ovo, naravno, savestan programer ne može sebi dozvoliti.
+U našem slučaju, ako bi prolazili kroz našu mapu na ovaj način, to bi valjalo činiti iza zaključanog muteksa dok gomila drugih niti (*thread*-ova) moguće čeka na upis ili čitanje. Ovo programer čiste savesti ne može sebi dozvoliti.
 
-Moramo naći način da nam pristup izjanđalim tokenima bude brži. U tu svrhu, prvo ćemo definisati ono što znamo da moramo. Definisaćemo strukturicu u kojoj držimo informaciju o jednom jedinom tokenu, kao i informaciju o izjanđalosti tog tokena. Dovoljno je da na jednom mestu grupišemo token i kovertu koju smo pod tim tokenom sačuvali:
+Moramo naći način da nam pristup izjanđalim tokenima bude brži. U tu svrhu, prvo ćemo definisati ono što znamo da moramo. Definisaćemo strukturicu u kojoj držimo informaciju o jednom tokenu, kao i informaciju o izjanđalosti istog. Za ovo je dovoljno da na jednom mestu grupišemo token i kovertu koju smo pod tim tokenom sačuvali:
 
 ```go
 type entry struct {
@@ -1380,7 +1380,7 @@ type entry struct {
 }
 ```
 
-Kad god nam je u ruci instanca ove strukture, janđalost tokena možemo proveriti metodom `expired()` koju implementira `*envelope`. Budući da bi u tom slučaju znali i token, znali bi šta da brišemo iz mape ukoliko je on izjanđao. *So far so good*.
+Kad god nam je u ruci instanca ove strukture, izjanđalost tokena možemo proveriti metodom `expired()` koju implementira `*envelope`. Budući da bi u tom slučaju znali i token, znali bi šta da brišemo iz mape ukoliko je on izjanđao. *So far so good*.
 
 E sad: jedno je imati ovu strukturicu, ali pronalaziti tokene zrele za progon, to je nešto sasvim drugo. Mi želimo da nam se brisanje starih tokena dešava što brže, uz što manje blokiranja drugih niti (*thread*-ova) na nekom muteksu. Zbog toga nam se čini super ako ceo taj posao završi sama metoda `Store()`. Ona ionako **mora** u jednom trenutku zaključati muteks, kako god se dovijali. Zašto onda ne iskoristiti to vreme da o istom trošku pronađe tačno jedan izjanđao token i, ako ga pronađe, sedne na njegovo mesto? Ovo mora da se odvija što je moguće brže tako da nijedan poziv metode `Store()` ne traje značajno duže od bilo kog drugog poziva. Imajmo u vidu da klijenti imaju slobodu da prozivaju naš interfejs pod kontrolom nekakvog tajmera, tako da bi bilo do jaja ako bi se ti pozivi odvijali glatko, bez značajnih razlika u dužini izvršavanja.
 
@@ -1395,13 +1395,13 @@ Pada na um jedna ideja. Ako bi u početku recimo imali prazan slajs neke početn
 
 Algoritam bi išao nekako ovako:
 
-1. Metoda `Store()`, budući da je mesto `buffer[curr]` u početku prazno ( `buffer[0] == nil`), jednostavno upiše `payload` u mapu, a na mestu `buffer[0]` ostavi strukturicu `entry` koja opisuje šta je u mapi sačuvano. Nakon toga, metoda `Store()` uveća `curr` za 1
+1. Metoda `Store()`, budući da je mesto `buffer[curr]` u početku prazno ( `buffer[0] == nil`), jednostavno upiše kovertu sa `payload`-om u mapu, a na mestu `buffer[0]` ostavi strukturicu `entry` koja opisuje šta je u mapi sačuvano. Nakon toga, metoda `Store()` uveća `curr` za 1
 2. Metoda nastavlja postupak iz 1. sve dok nailazi na prazna mesta, to jest sve dok ne dođe do kraja bafera. A kada dođe, ona prosto vrati `curr` na 0 i čeka sledeći poziv.
 3. Budući da je `curr` sada opet 0, mesto `buffer[0]` sledećeg puta sigurno neće biti prazno. Međutim, znamo da će se na tom mestu nalaziti najstariji token. Ovo znači da baš taj token ima najveću šansu da bude izjanđao. 
 4. Ako zaista jeste izjanđao, onda ga `Store()` jednostavno izbriše iz mape, a mesto `buffer[0]` prejaše novom strukturicom `entry`. Naravno, `Store` opet poveća `curr` za 1 odmah iza toga.
-5. Metoda `Store()` nastavlja postupak iz 4. sve dok nailazi na izjanđale tokene. Na ovaj način se izjanđali tokeni brišu, a na njihovo mesto dolaze novi, mlađi tokeni.
+5. Metoda `Store()` nastavlja postupak iz 4. sve dok nailazi na izjanđale tokene. Na ovaj način se izjanđali tokeni brišu, a na njihovo mesto dolaze novi, mlađani tokeni.
 6. Ipak, u zavisnosti od početne veličine bafera, metoda `Store()` će moguće jednom naleteti na važeći token. Šta sad?
-7. Kada se to desi, to će biti znak da nam je bafer pun važećih tokena, i da izjanđalih tokena više nema. Drugim rečima, bafer valja proširiti. U tu svrhu, alociraćemo dvostruko duži novi bafer, kopirati elemente iz starog u novi, te nakon postavljanja promenljive `curr` na prvo prazno mesto u novom baferu, nastaviti postupak vrativši se na 1.
+7. Kada se to desi, to će biti znak da nam je bafer pun važećih tokena, i da izjanđalih tokena više nema. Drugim rečima, bafer valja proširiti. U tu svrhu, alociraćemo dvostruko duži nov bafer, što, videli smo, neizostavno dovodi do kopiranja elemenata iz starog u novi, te nakon postavljanja promenljive `curr` na prvo prazno mesto u novom baferu, nastaviti postupak vrativši se na 1.
 
 Na ovaj način bismo osigurali da se izjanđali tokeni brišu. 
 
