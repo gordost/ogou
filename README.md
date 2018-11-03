@@ -1430,13 +1430,13 @@ type tokenRing struct {
 }
 ```
 
-Primetimo da ova struktura ujedno predstavlja i celu pantljičaru: iz svakog njenog članka moguće je obići celu, uzastopnim korišćenjem promenljive `next`.
+Primetimo da ova struktura ujedno predstavlja i celu pantljičaru: iz svakog njenog članka moguće ju je obići uzastopnim korišćenjem promenljive `next`.
 
-Da bi kōd izgledao koliko-toliko uljudno, od rekvizita nam je potrebna fabrika praznih pantljičara. Ta fabrika bi trebalo da ima metodu `manufacture()`. Prvi put pozvana, `manufacture()` će vratiti praznu pantljičaru inicijalne dužine. Sledeći put, `manufacture()` će vratiti pantljičaru iste dužine kao prvi put: ovo zato da bi naša pantljičara, nakon lepljenja nove na staru, postala dvostruko duža. Pri svim sledećim pozivima ove metode, vraćena pantljičara bi trebalo da bude dvostruko duža od prethodne.
+Da bi kōd izgledao koliko-toliko uljudno, od rekvizita nam je potrebna fabrika praznih pantljičara. Ta fabrika bi trebalo da ima metodu `manufacture()`. Prvi put pozvana, `manufacture()` će vratiti praznu pantljičaru inicijalne dužine. Sledeći put, `manufacture()` će vratiti pantljičaru iste dužine kao prvi put. Ovo zato da bi naša pantljičara, nakon lepljenja nove na staru, postala dvostruko duža. Pri svim sledećim pozivima ove metode, vraćena pantljičara bi trebalo da bude dvostruko duža od prethodne.
 
-Na ovaj način bi naša pantljičara, poput slajsova, eksponencijalnom brzinom nalazila potreban kapacitet. Nakon izvesnog broja produženja, pantljičara će u jednom trenutku biti dovoljno dugačka da algoritam opisan gore nailazi isključivo na izjanđale tokene. U tom slučaju ćemo reći da je pantljičara postala stabilna u odnosu na količinu tokena sa kojom se suočavamo. Od tada, pantljičaru neće biti potrebno dodatno proširivati.
+Na ovaj način bi naša pantljičara, poput slajsova, eksponencijalnom brzinom nalazila potreban kapacitet. Nakon izvesnog broja lepljenja, pantljičara će u jednom trenutku postati dovoljno dugačka da algoritam opisan gore nailazi isključivo na izjanđale tokene: vreme potrebno da pantljičata obrne krug će biti duže od vremena života tokena. U tom slučaju ćemo reći da je pantljičara postala stabilna u odnosu na količinu tokena sa kojom se suočavamo. Od tada, pantljičaru neće biti potrebno dalje produžavati.
 
-I još nešto: efikasnosti radi, svaki put kad fabrika primi narudžbu za novu pantljičaru(metoda `manufacture()`), neposredno pre isporuke fabrika će lansirati go-rutinu koja će u odvojenoj niti praviti jednu još noviju. Za vreme koje je potrebno da se vraćena pantljičara potroši, sve su šanse da će ta još novija biti spremna za isporuku kad na to dođa red. Na ovaj način, prelaz sa stare na novu pantljičaru biće izglađen.
+I još nešto: efikasnosti radi, svaki put kad fabrika primi narudžbu za novu pantljičaru (preko poziva metode `manufacture()`), neposredno pre isporuke fabrika će lansirati go-rutinu koja će u odvojenoj niti praviti jednu još noviju. Za vreme koje je potrebno da se vraćena pantljičara potroši, sve su šanse da će ta još novija biti spremna za isporuku kad na to dođa red. Na ovaj način, prelaz sa stare na novu pantljičaru biće izglađen.
 
 Struktura potrebna za implementaciju fabrike pantljičara izgleda ovako:
 
