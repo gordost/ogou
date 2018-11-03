@@ -2100,9 +2100,9 @@ ok      github.com/ogou/token    0.672s
 
 Da bi ilustrovali kako se pišu izvršni programi, a ne samo biblioteke, ovaj repo sadrži jedan takav program. To je jedan jednostavan HTTP-serverčić koji dozovljava da se igramo onim što smo do sada napisali.
 
-Nećemo detaljno disecirati ovaj program; ionako smo se previše raspisali. Reći ćemo samo to da se kod za ovo nalazi `main` paketu kojeg možete pogledati [ovde](github.com/gordost/ogou/main/main.go)
+Nećemo detaljno disecirati ovaj program; ionako smo se previše raspisali. Reći ćemo samo to da se kod za ovo nalazi `main` paketu kojeg možete pogledati [ovde](https://github.com/gordost/ogou/blob/master/main/main.go)
 
-Uputstvo kako da izgradite izvršni program se nalazi [ovde](github.com/gordost/ogou/main/README.md)
+Uputstvo kako da izgradite izvršni program se nalazi [ovde](https://github.com/gordost/ogou/blob/master/main/README.md)
 
 ###  Kuda dalje?
 
