@@ -972,9 +972,9 @@ Iako `syncedMapStore` je sada na prvi pogled do jaja, ovde se postavlja jedno kl
 
 Stvar je u tome što će različite niti (*thread*-ovi) zvati `Fetch()` i `Store()` u poretku koji je za nas nepoznat. Zamislite sada da imate 1000 istovremenih poziva metode `Fetch()`, a nijedan `Store()`. Prema algoritmu gore, svih ovih 1000 poziva će se nagurati u red ispred muteksa, sprečavajući jedan drugog da se dešavaju istovremeno. Međutim, budući da `Fetch()` uopšte ne mutira mapu, činjenica je da ništa ne bi smetalo ni da se ovi pozivi *ipak* dešavaju isotovremeno. Mape u Go-u, kao i mnogo čega drugog, ionako su *thread-safe* kada se radi samo o čitanju. Zato jedino što stoji na putu ovom potencijalnom paralelizmu jeste bahatost našeg algoritma gore, i ništa više.
 
-Stvar se drastično menja kada se u priču uključi `Store()`: ova metoda mutira mapu, i to je ono što uopšte generiše potrebu za zaključavanjem muteksa. Bez nje, muteks ne bi ni morali zaključavati. Nameće se pitanje: kako izvesti da `Fetch()`-ovi jedan drugom ne smetaju, ali da, čim naiđe `Store()`, da se muteks ipak zaključa?
+Stvar se drastično menja kada se u priču uključi `Store()`: ova metoda mutira mapu, i to je ono što uopšte generiše potrebu za zaključavanjem muteksa. Bez nje, muteks ne bi ni morali zaključavati. `Fetch()`-ovi su ovce, a `Store()`je vuk: ništa ne smeta pustiti 1000 ovaca istovremeno u tor. Ali čim naiđe vuk, njega valja pustiti samo ako u toru nema nijedne ovce, da ne bi neku od njih pojeo. Isto tako, ne valja u tor istovremeno pustiti ni dva vuka, da se ne bi međusobno poklali. E sad: kako izvesti da `Fetch()`-ovi jedan drugom ne smetaju, ali da, čim naiđe `Store()`, da se naš muteks ipak zaključa?
 
-Za ovo u Go-u služi jedna varijanta muteksa koja se zove `*sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje ne sprečavaju čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks, ali zato sprečavaju pisce. Što se pisaca tiče, oni će ionako koristiti metode `Lock()` i `Unlock()` kao ranije, sprečavajući sve živo da prođe muteks osim sebe samih. Sad kad ovo znamo, prostakluk je poboljšati algoritam da bude daleko efikasniji na čitanju:
+Za ovo u Go-u služi jedna varijanta muteksa koja se zove `*sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje ne sprečavaju druge čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks. Međutim, `RLock()` sprečava pisce: što se njih tiče, oni će ionako koristiti stare metode `Lock()` i `Unlock()`, sprečavajući sve živo da prođe muteks osim sebe samih. Sad kad ovo znamo, prostakluk je poboljšati algoritam da bude daleko efikasniji na čitanju:
 
 ```go
 func NewSyncedMapStore() Store {
@@ -999,6 +999,8 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
     return sms.mapstore.Fetch(token)
 }
 ```
+
+Novi algoritam je efikasniji zato što i dalje uključuje moranje, dos su sva nemoranja eliminisana.
 
 ###  Kanali (*channels*) i komunikacija između go-rutina
 
