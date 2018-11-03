@@ -2055,14 +2055,14 @@ Sada lansiramo go-rutine u petlji...
     }
 ```
 
-Ako ovo prođe, imamo sve razloge da verujemo da je `tokenStore` *threadSefa*. Kao što smo najavili, na kraju proveravamo da li nam je dužina pantljičare očekivana za datu količinu poziva metode `Store()`:
+Ako ovo prođe, imamo sve razloge da verujemo da je `tokenStore` *thread safe*. Kao što smo najavili, na kraju proveravamo da li nam je dužina pantljičare očekivana za datu količinu poziva metode `Store()`:
 ```go
 checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
 ```
 
 ---
 
-Ovim smo završili junit-testove koje smo ovde nameravali napisati. Ako bismo ih sada izvršili, dobili bismo sledeći rezultat:
+Ovim smo završili unit-testove koje smo ovde nameravali napisati. Ako bismo ih sada izvršili, dobili bismo sledeći rezultat:
 
 ```
 $ go test -v
@@ -2096,7 +2096,7 @@ PASS
 ok      github.com/ogou/token    0.672s
 ```
 
-###  I za kraj... `main.main()`
+###  Nešto za kraj: `main.main()`
 
 Da bi ilustrovali kako se pišu izvršni programi, a ne samo biblioteke, ovaj repo sadrži jedan takav program. To je jedan jednostavan HTTP-serverčić koji dozovljava da se igramo onim što smo do sada napisali.
 
