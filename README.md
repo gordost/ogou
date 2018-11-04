@@ -710,7 +710,7 @@ func testStoreFetch(t *testing.T, store Store) {
     if err != nil {
         t.Fatal(err)
     }
-    payload, _ := store.Fetch(token)
+    payload, err := store.Fetch(token)
     if err != nil {
         t.Fatal(err)
     }
@@ -796,7 +796,7 @@ Posmatrajmo naredbu
 ```go
     go testStoreFetch(t, store)
 ```
-Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova naredba se izvršava u petlji tačno 100 puta. Svaki put kada se ona izvrši, `Go` lansira novu nit (*thread*) u kojoj se izvršava funkcija `testStoreFetch`. Međutim, odmah zatim, ne čekajući da se prva nit završi, lansira se još jedna ista takva nit, pa još jedna, pa još jedna... i tako 100 puta. Na kraju petlje će biti kao da smo pustili roj od 100 niti od kojih svaka izvršava jednu te istu funkciju pozvanu sa različitim parametirma u nekakvom isprepletanom kompjuterskom vrememnu. Na kraju petlje čekamo jednu desetinku sekunde, da nitima iz roja damo dovoljno vremena da naprave karambol i... :boom:
+Primetimo službenu reč `go`, što je naredba po kojoj je Go dobio ime. Ova naredba se izvršava u petlji tačno 100 puta. Svaki put kada se ona izvrši, `Go` lansira novu nit (*thread*) u kojoj se izvršava funkcija `testStoreFetch`. Međutim, odmah zatim, ne čekajući da se prva nit završi, lansira se još jedna ista takva nit, pa još jedna, pa još jedna... i tako 100 puta. Na kraju petlje će biti kao da smo pustili roj od 100 niti od kojih svaka izvršava jednu te istu funkciju pozvanu sa različitim parametirma u nekakvom isprepletanom kompjuterskom vremenu. Na kraju petlje čekamo jednu desetinku sekunde, da nitima iz roja damo dovoljno vremena da naprave karambol i... :boom:
 
 Stvar je u tome što je mapa jedna, a niti/*thread*-ova ima brate 100 komada. I taman kada jedna nit počne u nju nešto da piše, ona biva na pola posla prekinuta jer neka druga nit isto tako pokušava da tamo nešto piše. Ovo dovodi do *fatal error: concurrent map writes*, što izveštaj unit-testa potvrđuje.
 
@@ -1235,7 +1235,7 @@ type syncedMapStore struct {
 
 Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Doduše, tu je `mapStore`, a sa njim već može da se barata.
 
-Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat, a onda **taj koverat** sačuvamo u `mapStore`. Kasnije kada naiđe `Fetch()`, mi prvo iscimamo mapu da na preda koverat, a onda jednostavno vratimo rezultat.
+Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat, a onda **taj koverat** sačuvamo u `mapStore`. Kasnije kada naiđe `Fetch()`, mi prvo iscimamo mapu da nam preda koverat, a onda jednostavno vratimo rezultat.
 
 Koverat koji smo opisali izgleda ovako:
 ```go
@@ -1398,9 +1398,9 @@ Pada na um jedna ideja. Ako bi u početku recimo imali prazan slajs neke početn
 Algoritam bi išao nekako ovako:
 
 1. Metoda `Store()`, budući da je mesto `buffer[curr]` u početku prazno ( `buffer[0] == nil`), jednostavno upiše kovertu sa `payload`-om u mapu, a na mestu `buffer[0]` ostavi strukturicu `entry` koja opisuje šta je u mapi sačuvano. Nakon toga, metoda `Store()` uveća `curr` za 1
-2. Metoda nastavlja postupak iz 1. sve dok nailazi na prazna mesta, to jest sve dok ne dođe do kraja bafera. A kada dođe, ona prosto vrati `curr` na 0 i čeka sledeći poziv.
+2. Metoda nastavlja postupak iz 1. sve dok nailazi na prazna mesta, to jest dok ne dođe do kraja bafera. A kada dođe, ona prosto vrati `curr` na 0 i čeka sledeći poziv.
 3. Budući da je `curr` sada opet 0, mesto `buffer[0]` sledećeg puta sigurno neće biti prazno. Međutim, znamo da će se na tom mestu nalaziti najstariji token. Ovo znači da baš taj token ima najveću šansu da bude izjanđao. 
-4. Ako zaista jeste izjanđao, onda ga `Store()` jednostavno izbriše iz mape, a mesto `buffer[0]` prejaše novom strukturicom `entry`. Naravno, `Store` opet poveća `curr` za 1 odmah iza toga.
+4. Ako jeste izjanđao, onda ga jednostavno izbrišemo iz mape, a mesto `buffer[0]` prejašemo novom strukturicom `entry`. Naravno, `curr` opet povećamo za 1 odmah iza toga.
 5. Metoda `Store()` nastavlja postupak iz 4. sve dok nailazi na izjanđale tokene. Na ovaj način se izjanđali tokeni brišu, a na njihovo mesto dolaze novi, mlađani tokeni.
 6. Ipak, u zavisnosti od početne veličine bafera, metoda `Store()` će moguće jednom naleteti na važeći token. Šta sad?
 7. Kada se to desi, to će biti znak da nam je bafer pun važećih tokena, i da izjanđalih tokena više nema. Drugim rečima, bafer valja proširiti. U tu svrhu, alociraćemo dvostruko duži nov bafer, što, videli smo, neizostavno dovodi do kopiranja elemenata iz starog u novi, te nakon postavljanja promenljive `curr` na prvo prazno mesto u novom baferu, nastaviti postupak vrativši se na 1.
@@ -1421,9 +1421,9 @@ Umesto u nekakvom slajsu, informacije o tokenima (`entry`-je) ćemo držati u je
 
 Sve ostalo ćemo raditi isto kao i u algoritmu opisanom gore. Jedina je razlika što promenljiva `curr` ovog puta neće biti prirodan broj, nego pokazivač na tekući članak naše pantljičare. A umesto inkrementiranja promenljive `curr`, na sledeći ćemo prelaziti sa `curr = curr.next`
 
-Najbitnija razlika nastaje kad naiđe situacija u kojoj listu treba proširiti. Za razliku od slajsa, kod povezanih lista ovo može i bez tumbanja memorije (*in-place reallocation*). Ako nam se u tom trenutku pri ruci zgodno nađe jedna ista takva lista, samo prazna (a pobrinućemo se da će da se nađe), sve što treba uraditi je "nalepiti" novu listu na staru, i tako dobiti dvostruko dužu listu, skoro bez utroška vremena. U vremenu izvršavanja, ovakve situacije će se doživljavati kao da se nisu ni desile.
+Najbitnija razlika nastaje kad naiđe situacija u kojoj listu treba produžiti. Za razliku od slajsa, kod povezanih lista ovo može i bez tumbanja memorije (*in-place reallocation*). Ako nam se u tom trenutku pri ruci zgodno nađe jedna ista takva lista, samo prazna (a pobrinućemo se da će da se nađe), sve što treba uraditi je "nalepiti" novu listu na staru, i tako dobiti dvostruko dužu listu takoreći bez utroška vremena. U vremenu izvršavanja, ovakve situacije će se doživljavati kao da se nisu ni desile.
 
-Definisaćemo strukturu za članak naše pantljičare, koju ćemo ovde nostalgično nazvati `tokenRing`:
+Definisaćemo strukturu za članak naše pantljičare, koji ćemo ovde nostalgično nazvati `tokenRing`:
 
 ```go
 type tokenRing struct {
@@ -1436,7 +1436,7 @@ Primetimo da ova struktura ujedno predstavlja i celu pantljičaru: iz svakog nje
 
 Da bi kōd izgledao koliko-toliko uljudno, od rekvizita nam je potrebna fabrika praznih pantljičara. Ta fabrika bi trebalo da ima metodu `manufacture()`. Prvi put pozvana, `manufacture()` će vratiti praznu pantljičaru inicijalne dužine. Sledeći put, `manufacture()` će vratiti pantljičaru iste dužine kao prvi put. Ovo zato da bi naša pantljičara, nakon lepljenja nove na staru, postala dvostruko duža. Pri svim sledećim pozivima ove metode, vraćena pantljičara bi trebalo da bude dvostruko duža od prethodne.
 
-Na ovaj način bi naša pantljičara, poput slajsova, eksponencijalnom brzinom nalazila potreban kapacitet. Nakon izvesnog broja lepljenja, pantljičara će u jednom trenutku postati dovoljno dugačka da algoritam opisan gore nailazi isključivo na izjanđale tokene: vreme potrebno da pantljičara obrne krug biće duže od očekivanog vremena života svih tokena. U tom slučaju ćemo reći da je pantljičara postala stabilna u odnosu na količinu tokena sa kojom se suočavamo. Od tada, pantljičaru neće biti potrebno dalje produžavati.
+Na ovaj način bi naša pantljičara, poput slajsova, eksponencijalnom brzinom nalazila potreban kapacitet. Nakon izvesnog broja lepljenja, pantljičara će u jednom trenutku postati dovoljno dugačka da algoritam opisan gore nailazi isključivo na izjanđale tokene: vreme potrebno da pantljičara obrne krug biće duže od očekivane dužine života tokena. U tom slučaju ćemo reći da je pantljičara postala stabilna u odnosu na količinu tokena sa kojom se suočavamo. Od tada, pantljičaru neće biti potrebno dalje produžavati.
 
 I još nešto: efikasnosti radi, svaki put kad fabrika primi narudžbu za novu pantljičaru (preko poziva metode `manufacture()`), neposredno pre isporuke fabrika će lansirati go-rutinu koja će u odvojenoj niti praviti još jednu, noviju. Za vreme koje je potrebno da se isporučena pantljičara potroši, sve su šanse da će ta još novija biti spremna za isporuku kad na to dođe red. Na ovaj način, prelaz sa stare na novu pantljičaru biće gladak.
 
@@ -1515,7 +1515,7 @@ Sada lansiramo go-rutinu da nam napravi još jednu, rezervnu, i za vreme dok ona
     return <-fct.spareChannel
 ```
 
-Na kraju, zamijetimo funkciju `pow2()`: ona vraća stepen dvojke... dobro, karte su ovde malkice nameštene, jer za negativne argumente ona vraća keca umesto nekakav razlomak. Ovo je da bi tempirali kapacitet pantljičara prema našim potrebama. Diduše, Go ima nekakvo stepenovanje u `math`-paketu, ali samo za realne brojeve. Otuda `pow2()` :angry: 
+Na kraju, zamijetimo funkciju `pow2()`: ona vraća stepen dvojke... dobro, karte su ovde malkice nameštene, jer za negativne argumente ona vraća keca umesto nekakav razlomak. Ovo je da bi tempirali kapacitet pantljičara prema našim potrebama. Doduše, Go ima nekakvo stepenovanje u `math`-paketu, ali samo za realne brojeve. Otuda `pow2()` :angry: 
 
 ---
 
@@ -1661,37 +1661,37 @@ func (ts *TokenStore) expandTokenRing() {
 }
 ```
 
-Funkcija `expandTokenRing()` prvo naruči novu kružnu pantljičaru, te joj odabere dva uzastopna članka za `first` i `last`. Ovde moramo povesti računa da sledeći od `last` mora da bude `first`, da bi pantljičara bila kružna. Zato je na prvi pogled malkice čudno da smo `first` dobili kao sledeći od `last` ali, budući da pantljičara sama sebi grize rep, ovo da drugi pogled i nije čudno:
+Funkcija `expandTokenRing()` prvo naruči novu kružnu pantljičaru, te joj odabere dva uzastopna članka za `first` i `last`. Ovde moramo povesti računa da sledeći od `last` mora da bude `first`, da bi pantljičara bila kružna, što objašnjava čudnoću toga da smo `first` dobili kao sledeći od `last`. Budući da pantljičara sama sebi grize rep, ovo na drugi pogled i nije čudno:
 
 ```go
     last := ts.tokenRingFactory.manufacture()
     first := last.next
 ```
 
-Novu pantljičaru želimo cvikati baš na ovom mestu, da bi je nastavili na staru. 
+Novu pantljičaru želimo kidati baš na ovom mestu, da bi je nastavili na staru. 
 
-Dalje: mi znamo da članak `curr` stare pantljičare pokazuje na najstariji token. Za ovaj token još znamo i to da je validan; u suprotnom, pantljičaru ne bi ni produžavali. Međutim, mi isto tako znamo da prethodnik od `curr` sadrži najmlađi token, jer je to poslednji token koji smo pantljičari ikada dodali. Staru pantljičaru želimo precvikati baš na tom mestu, i nastaviti je na novu. Ovo je razlog što smo u algoritmu gore dužnosno pamtili prethodnika od `curr` svaki put kad `curr` mrdne za jedno mesto (promenljiva `prev`).
+Dalje: mi znamo da članak `curr` stare pantljičare pokazuje na najstariji token. Za ovaj token znamo i to da je validan; u suprotnom, pantljičaru ne bi ni produžavali. Međutim, mi isto tako znamo da prethodnik od `curr` sadrži najmlađi token, jer je to poslednji token koji smo pantljičari ikada dodali. Staru pantljičaru želimo precvikati baš na tom mestu, i nastaviti je na novu. Ovo je razlog što smo u algoritmu gore dužnosno pamtili prethodnika od `curr` svaki put kad `curr` mrdne za jedno mesto (u promenljivoj `prev`).
 
-Sada je laganica. Pantljičare spajamo tako što poslednji element nove pantljičare želimo da se produži u `curr`, a prethodnik od `curr` u staroj pantljičari (što je kod nas `prev`) želimo da se produži u prvi element nove pantljičare `first`. Na ovaj način čuvamo hronologiju tokena, tako da će najstariji token opet prvi doći na red čim se ovaj prilepak potroši:
+Sada je laganica. Pantljičare spajamo tako što poslednji element nove pantljičare želimo da se produži u `curr`, a prethodnik od `curr` u staroj pantljičari (što je kod nas `prev`) želimo da se produži u prvi element nove pantljičare `first`. Na ovaj način čuvamo hronologiju tokena, tako da će najstariji token opet prvi doći na red čim se ovaj novi prilepak potroši:
 
 ```go
     last.next = ts.curr
     ts.prev.next = first
 ```
 
-Ostaje da `curr` pomerimo tako da pokazuje na prvo prazno mesto u prilepku:
+Ostaje da `curr` pomerimo tako da pokazuje na prvo prazno mesto u prilepku...
 
 ```go
     ts.curr = first
 ```
 
-I to bi bilo to. Ostaju nam unit-testovi, a njih nikada ne treba preskakati :smile:
+... i to bi bilo to. Ostaju nam unit-testovi, a njih nikada ne treba preskakati :smile:
 
 ##### Unit-testovi za `tokenStore`
 
 Neki shvataju unit-testove kao prioritet, i pišu ih pre nego što napišu i redak korisnog koda. Naravno, ovakvi testovi u početku nema šanse da prođu, ali se stanje vremenom popravlja dodavanjem korisnog koda. Svaka čast onom ko ovako može.
 
-Neki shvataju unit-testove kao moranje, i pišu ih tek na kraju. Mislim da ovo nije baš pametno. I programeri su ljudi, te kad jednom završe koristan rad, u opasnosti su da samo zbrljaju par unit-testova na kraju, čisto da umire savest. Da bi pokrivenost koda testovima dostigla prihvatljiv nivo, ovde je potrebna velika količina samodiscipline i volje da se, nakon završenog posla, napravi još jedan dodatni korak. Zato svaka čast onom ko ovako može.
+Neki shvataju unit-testove kao moranje, i pišu ih tek na kraju. Mislim da ovo nije baš pametno. I programeri su ljudi, te kad jednom završe koristan rad, u opasnosti su da samo zbrljaju par unit-testova na kraju, čisto da umire savest. Da bi pokrivenost koda testovima dostigla prihvatljiv nivo, ovde je potrebna velika količina samodiscipline i volje da se, nakon završenog posla, napravi još jedan dodatni iskorak. Zato svaka čast onom ko ovako može.
 
 Meni lično su unit-testovi zabava, jer na taj način podvrgavam kod iskušenjima koja se u praksi retko dešavaju. Nešto kao kad testiraju građevinu za opterećenja na koja se u praksi ne nailazi. Ja uvek počnem sa pisanjem korisnog koda, ali čim mi se zaokruži neka funkcionalnost, ja odmah dodam unit test za to jer me zabavlja da vidim kako radi.
 
@@ -1743,7 +1743,7 @@ func (r *tokenRing) count(filter func(tr *tokenRing) bool) int {
 }
 ```
 
-Korisno je reći da smo metodu `count` nalepili na `*tokenRing` u test-fajlu, a ne u fajlu gde `*tokenRing` inače stanuje. Ovo je moguće jer nam se unit-testovi nalaze u istom paketu kao i `tokenRing`, a šta se nalazi u kom fajlu u okviru istog paketa nije mnogo bitno. Ipak, kad jednom iskompajliramo glavni program naredbom `go build`, mislim da ova metoda neće biti ulinkovana. Ona je tu samo za potrebe unit-testa, a ovo bi Go trebalo da zna.
+Korisno je zapaziti da smo metodu `count` nalepili na `*tokenRing` u test-fajlu, a ne u fajlu gde `*tokenRing` inače stanuje. Ovo je moguće jer nam se unit-testovi nalaze u istom paketu kao i `tokenRing`, a šta se nalazi u kom fajlu u okviru istog paketa nije mnogo bitno. Ipak, kad jednom iskompajliramo glavni program naredbom `go build`, mislim da ova metoda neće biti ulinkovana. Ona je tu samo za potrebe unit-testa, a ovo bi Go trebalo da zna.
 
 Osim toga, primetimo liniju:
 ```go
@@ -1818,7 +1818,7 @@ func TestTokenStoreFetch(t *testing.T) {
 }
 ```
 
-Uh, ovo baš ispade dugačko :unamused: Ispade unit-test duži od korisnog koda, ali ovo je često baš tako.
+Uh, ovo baš ispade dugačko :unamused: Iako je nekome možda čudnjikavo da mu je unit-test duži od korisnog koda, ovo je često baš tako.
 
 Na početku napravimo novi `Store` i odmah ga "izlijemo" kao `tokenStore`, da bi mogli da mu brojimo creva. Ovo zato što promenljiva `store` sadrži instancu interfejsa `Store`, što znači da preko nje nemamo nikakav pristup unutrašnjim organima implementacije. Otuda potreba za izlivanjem ove promenljive u `tokenStore`:
 
@@ -1826,6 +1826,8 @@ Na početku napravimo novi `Store` i odmah ga "izlijemo" kao `tokenStore`, da bi
     store := NewTokenStore(ttl, initialCapacity)
     tokenStore, _ := store.(*tokenStore)
 ```
+
+Primetimo da potrebu za livnicom kao ovom gore imamo samo u unit testovima, jer u njima ispitujemo ispravnost svega što smo napisali. Za prave potrošače našeg koda, instanca interfejsa `Store` je sve što im treba.
 
 Sada `store` napunimo sa onoliko tokena koliki je njegov početni kapacitet, i prebrojimo ih na ruke, da bi im proverili brojno stanje:
 ```go
@@ -1904,7 +1906,7 @@ Ali muke za `tokenStore` ovim još nisu završene. Sada ćemo dodati izvestan br
     checkCount(t, tokenStore.curr, nil, 2*initialCapacity, unexpectedRingCapacity)
 ```
 
-Ovim smo završili proveru ponašanja `tokenStore`, proveravajući usput izvestan broj drugih očekivanja. Ako *sve ovo* prođe na testu, to je dokaz (dobro, ne baš dokaz, ali svakako dobar argument) da je `tokenStore` lepo naučio svoju ulogu, i da ga je moguće koristiti u produkciji. Ako bismo sad izvršili unit-testove, dobili bi sledeći rezultat:
+Ovim smo završili proveru ponašanja `tokenStore`, proveravajući usput i izvestan broj drugih očekivanja. Ako *sve ovo* prođe na testu, to je dokaz (dobro, ne baš dokaz, ali svakako dobar argument) da je `tokenStore` lepo naučio svoju ulogu, i da ga je moguće koristiti u produkciji. Ako bismo sad izvršili unit-testove, dobili bismo sledeći rezultat:
 ```
 $ go test -v
 === RUN   TestMapStoreFetch
@@ -1925,7 +1927,7 @@ Međutim, nije lako usuditi se pustiti ovo u produkciju bez provere da li je `to
 
 Kad god pišete nešto što bi prema specifikaciji trebalo da bude *thread safe*, napišite unit-test koji baš to proverava. Lansirajte mnogo paralelnih go-rutina koje će nemilosrdno drndati vaš kod, i proverite šta se dešava. Nije potrebno da takav test proverava korektnost dobijenih rezultata (takav test bi trebalo da ste već napisali), nego samo to da vam ništa neće pući, kao i to da će se sve go-rutine vratiti svom Tvorcu. 
 
-Srećom, ovakve stvari u Go-u su laganica. Unit-test za *thread safety* naći ćete dole. I to sa jednim malim dodatkom: budući da nam je to usput, u ovom testu proveravamo da li nam se dužina dobijenih `tokenRing`-ova uklapa sa brojem poziva metode `Store()`:
+Srećom, ovakve stvari u Go-u su laganica. Unit-test za *thread safety* naći ćete dole. I to sa jednim malim dodatkom: budući da nam je usput, u ovom testu proveravamo da li nam se dužina dobijenih `tokenRing`-ova uklapa sa brojem poziva metode `Store()`:
 
 ```go
 func TestTokenStoreConcurrency(t *testing.T) {
@@ -1958,9 +1960,9 @@ func TestTokenStoreConcurrency(t *testing.T) {
 
 Ovde smo definisali niz anonimnih struktura koje sadrže broj niti (*thread*-ova) koje će navaliti da prozivaju `Store()`, kao i očekivanu dužinu pantljičare nakon što sve niti završe svoj posao.
 
-Primetimo još nešto: brojeve iz gornje tabele smo računali napamet, uzimajući u obzir činjenicu da je konstanta `initialCapacity` definisana kao `5`. Ako bi ovu konstantu najednom promenili, ovaj unit-test ne bi prošao. Čistunci bi rekli da bi očekivane dužine pantljičara trebalo da zavise od ove konstante ako želimo da kod bude korektan, pa se postavlja pitanje zašto smo to ovako uradili?
+Primetimo još nešto: brojeve iz gornje tabele smo računali napamet, uzimajući u obzir činjenicu da je konstanta `initialCapacity` definisana kao `5`. Ako bi ovu konstantu najednom promenili, ovaj unit-test ne bi prošao. Čistunci bi rekli da bi očekivane dužine pantljičara trebalo da zavise od ove konstante ako želimo da kod bude korektan, pa se postavlja pitanje: zašto smo to ovako uradili?
 
-Ono što u opštem slučaju nije dopušteno u glavnom kodu, često je dopušteno u unit-testovima. Svrha unit-testova nije da prođu za svaku vrednost konstanti koje smo birali, nego da dignu uzbunu kad god im se učini nešto sumnjivo. Ako bi konstantu `initialCapacity` zaista promenili, ovaj test bi pukao, što je i cilj. To bi bio signal programeru da mu valja ponovo preračunati brojeve iz one tabele, prilagodivši ih novoj brednosti konstante `initialCapacity`. A ako mu to jednog dana dosadi, lenji programer bi mogao čistunski promeniti gornji kod da zaista zavisi od `initialCapacity`, ali to je sada druga priča.
+Ono što u opštem slučaju nije dopušteno u glavnom kodu, često je dopušteno u unit-testovima. Svrha unit-testova nije da prođu za svaku vrednost konstanti koje smo birali, nego da dignu uzbunu kad god im se učini nešto sumnjivo. Ako bi konstantu `initialCapacity` zaista promenili, ovaj test bi pukao, što je i cilj. To bi bio signal programeru da mu valja ponovo preračunati brojeve iz one tabele, prilagodivši ih novoj vrednosti konstante `initialCapacity`. A ako mu to jednog dana dosadi, lenji programer bi mogao čistunski promeniti gornji kod da zaista zavisi od `initialCapacity`, ali to je sada druga priča.
 
 Vidimo da ovde glavni posao radi funkcija `testTokenStoreConcurrency()` koja izgleda ovako (disekcija sledi):
 
@@ -2004,7 +2006,7 @@ Promenljive ovog tipa su jako korisne kada treba brojati da li su se sve lansira
 
 E sad, kako `wg` zna da li se neka go-rutina vratila ili ne? 
 
-Ovo valja malkice isprogramirati, ali je prosto kao pasulj. Svaki put kad pozovete `wg.Add(1)`, time ste ušli u dug za 1, a go rutine se razdužuju pozivajući `wg.Done()`. To znači da će `wg.Wait()` čekati sve dok sve go-rutine ne overe svoj izlazak sa `wg.Done()`, koliko god da ih ima.
+Ovo valja malkice isprogramirati, ali je prosto kao pasulj. Svaki put kad pozovete `wg.Add(1)`, time ste ušli u dug za 1, a go rutine vas razdužuju tako što pozovu `wg.Done()`. To znači da će `wg.Wait()` čekati sve dok sve go-rutine ne overe svoj izlazak sa `wg.Done()`, koliko god da ih ima.
 
 Budući da je `wg.Wait()` *ipak* blokirajući, i ovo valja zaštititi tajmerom. U tu svrhu nam služi pomoćna funkcija `isDoneWithinTimeout()` koja izgleda ovako:
 
@@ -2023,9 +2025,9 @@ func isDoneWithinTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
     }
 }
 ```
-Funkcija vraća `true` ukoliko je wg odblokirao u predviđenom roku. U suprotnom ona vraća `false`. 
+Funkcija vraća `true` ukoliko je wg odblokirao u predviđenom roku. U suprotnom ona vraća `false`. Ostavljamo čitaocu da proanalizira kako ovo radi, budući da su svi elementi sada poznati.
 
-Kad ovo znamo, ostatak je prostakluk. Prvo deklarišemo dve anonimne funkcije koje će generisati slučajne pozive metoda `Store()` i `Fetch()`, ali koje neće zaboraviti da se razduže pozivajući `wg.Done()` na kraju:
+Ostatak je prostakluk. Prvo deklarišemo dve anonimne funkcije koje će generisati slučajne pozive metoda `Store()` i `Fetch()`, ali koje neće zaboraviti da se razduže pozivajući `wg.Done()` na kraju:
 
 ```go
     storeWrapper := func(wg *sync.WaitGroup) {
@@ -2057,7 +2059,7 @@ Sada lansiramo go-rutine u petlji...
     }
 ```
 
-Ako ovo prođe, imamo sve razloge da verujemo da je `tokenStore` *thread safe*. Kao što smo najavili, na kraju proveravamo da li nam je dužina pantljičare očekivana za datu količinu poziva metode `Store()`:
+Ako ovo prođe, imamo sve razloge da verujemo da je `tokenStore` *thread safe*. Kao što smo najavili, na kraju samo proveravamo da li nam je dužina pantljičare očekivana za datu količinu poziva metode `Store()`:
 ```go
 checkCount(t, mem.curr, nil, expected, unexpectedRingCapacity)
 ```
@@ -2102,7 +2104,7 @@ ok      github.com/ogou/token    0.672s
 
 Da bi ilustrovali kako se pišu izvršni programi, a ne samo biblioteke, ovaj repo sadrži jedan takav program. To je jedan jednostavan HTTP-serverčić koji dozovljava da se igramo onim što smo do sada napisali.
 
-Nećemo detaljno disecirati ovaj program; ionako smo se previše raspisali. Reći ćemo samo to da se kod za ovo nalazi `main` paketu kojeg možete pogledati [ovde](https://github.com/gordost/ogou/blob/master/main/main.go)
+Ovde nećemo detaljno disecirati ovaj program; to istavljamo za vežbu. A ionako smo se previše raspisali. Reći ćemo samo to da se kod za ovo nalazi `main` paketu kojeg možete pogledati [ovde](https://github.com/gordost/ogou/blob/master/main/main.go)
 
 Uputstvo kako da izgradite izvršni program se nalazi [ovde](https://github.com/gordost/ogou/blob/master/main/README.md)
 
