@@ -966,6 +966,16 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
 
 Ovog puta onaj naš unit-test će da prođe. Primetimo da će i u ovom slučaju dolaziti do kopiranja `syncedMapStore`-a kad god pozovemo neku od njenih metoda, ali će te kopije sadržati dva pointera koji pokazuju na istu stvar kao i originali. Zato je pointerka implementacija cele stvari možda ipak čistija. Ako ništa, kopiranje košta nešto, a brže je kopirati jedan pointer nego dva, zar ne? 
 
+###### Zašto Go kopira svako đubre, te moramo da se zezamo sa pointerima da bi ga u tome ponekad sprečili?
+
+Go je izmišljen sa idejom da olakša paraleleno programiranje u kome su tradicinalno jedan od najvećih problema **mutirajući objekti**. Situacije u kojime više niti (*thread*-ova) može da vidi isti objekat i da ga mutira, one su jedan od najvećih izvora bagova koji postoji. Uporedite objekte tipa `String` u Javi sa objektima koje sami napravite. Svaki Javin `String` je nemutirajući objekat (*immutable object*), dok sve što sami napravite, ako se ekstra ne potrudite, nije. Ovo znači da su Javini stringovi neproblematični čak i onda kada više niti (*thread*-ova) može istovremeno da ih vidi, jer im nijedan od njih ne može ništa k'o što ni žaba ne može ništa lešniku: `String` se nakon nastanka više ne može promeniti. Sve što se može je da se na osnovu starih stringova dobijaju novi, ali isto tako nemutirajući stringovi. 
+
+Stvar se drastično menja ako je objekat mutirajući. Da ne bi sejali bagčine koji su veoma zajebani za otkrivanje svuda naokolo, mutacije ili valja sinhronizovati, ili takve objekte treba pisati da budu nemutirajući, poput stringova. Ovo je naročito važno kada šaljemo takve objekte funkcijama kao parametre: da li funkcija mutira objekat ili ne, večito je pitanje? Ako propustimo da adresiramo ove probleme na pravilan način, nayebali smo k'o žuti.  
+
+Međutim, pisanje nemutirajućih objekata u Javi ume da bude zeznuto, zbog čega ljudi izmišljaju čitave biblioteke samo zato da bi sebi olakšali taj posao. Jednu od najkorišćenijih možete naći ovde: [ovde](https://immutables.github.io).
+
+Autori Go-a su želeli da ovaj problem što više saseku u korenu, tako da se objekti u mnogim situacijama standardno ponašaju kao nemutirajući: kad god pošaljete neku strukturu nekoj funkciji kao parametar, funkcija će primiti kopiju te strukture, a ne original. Na ovaj način, funkcija može toj kopiji da radi šta joj je volja, ona time nikada neće biti u stanju da iznenadi pozivara. Čak i kada se to dešava u više niti (*thread*-ova), svaka nit će da se zeza sa svojom kopijom te strukture, što nikad nije frka. Ako ovo nije ono što želite, koristitite pointere, ali time ste odgovornost za sinhronizaciju preuzeli na svoja pleća. 
+
 ###### Fino brušenje
 
 Iako je `syncedMapStore` sada na prvi pogled do jaja, ovde se postavlja jedno klasično programersko pitanje: koliko je zaključavanje muteksa implementirano gore **u stvari** efikasno?
@@ -974,7 +984,7 @@ Stvar je u tome što će različite niti (*thread*-ovi) zvati `Fetch()` i `Store
 
 Stvar se drastično menja kada se u priču uključi `Store()`: ova metoda mutira mapu, i to je ono što uopšte generiše potrebu za zaključavanjem muteksa. Bez nje, muteks ne bi ni morali zaključavati. `Fetch()`-ovi su kao ovce, a `Store()`je vuk: ništa ne smeta pustiti 1000 ovaca da istovremeno uđu u tor. Ali čim naiđe vuk, njega valja pustiti samo ako u toru nema nijedne ovce, da ne bi neku od njih pojeo. Isto tako, ne valja u tor istovremeno pustiti ni dva vuka, da se ne bi međusobno poklali. E sad: kako izvesti da `Fetch()`-ovi jedan drugom ne smetaju, ali da, čim naiđe `Store()`, da se naš muteks ipak zaključa?
 
-Za ovo u Go-u služi jedna varijanta muteksa koja se zove `sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje **ne sprečavaju** druge čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks. Međutim, `RLock()` ipak sprečava piskarala. Što se piskarala tiče, oni će ionako koristiti stare metode `Lock()` i `Unlock()`, sprečavajući sve živo da prođe muteks osim sebe samih. 
+Za ovo u Go-u služi jedna varijanta muteksa koja se zove `sync.RWMutex`. Ovaj muteks se ponaša kao i poznati `sync.Mutex` gore, sa jednom bitnom razlikom: on ima metode `RLock()` i `RUnlock()`, a to su metode koje **ne sprečavaju** druge čitaoce (t.j. pozivare istih ovih metoda) da istovremeno prolaze muteks. Međutim, `RLock()` ipak sprečava pisce. Što se pisaca tiče, oni će ionako koristiti stare metode `Lock()` i `Unlock()`, sprečavajući sve živo da prođe muteks, osim sebe samih. 
 
 Sad kad ovo znamo, prostakluk je poboljšati algoritam tako da bude daleko efikasniji na čitanju:
 
@@ -1002,7 +1012,7 @@ func (sms syncedMapStore) Fetch(token string) (interface{}, error) {
 }
 ```
 
-Novi algoritam je efikasniji upravo zato što i dalje uključuje moranje, dok su u njemu sva nemoranja mudro eliminisana.
+Novi algoritam je efikasniji upravo zato što uključuje samo moranje, dok su sva nemoranja mudro izbegnuta.
 
 ###  Kanali (*channels*) i komunikacija između go-rutina
 
@@ -1069,7 +1079,7 @@ Probajmo zato nešto skroz blesavo. Go dopušta bezimene (unutrašnje) funkcije 
     elapsed := time.Since(start)
     fmt.Println(s, elapsed)
 ```
-Anonimna funkcija koju držimo u promenljivoj `suma` dodaje brojeve onako kako nailaze direktno na `s`, a ova promenljiva je definisana u glavnoj niti. Osim toga, funkcija inkrementira `doneCounter` čim završi veliko sabiranje. Glavna nit čeka da sve tri go-rutine završe posao u petlji, dremajući malo ako mora, ali stalno proveravajući da li je promenljiva `doneCounter` dostigla očekivanu vrednost. A kad je bude dostigla, glavna nit štampa rezultat. 
+Anonimna funkcija koju držimo u promenljivoj `suma` dodaje brojeve onako kako nailaze direktno na `s`, a ova promenljiva je definisana u glavnoj niti. Osim toga, funkcija inkrementira `doneCounter` čim završi veliko sabiranje. Glavna nit čeka da sve tri go-rutine završe posao u petlji, dremajući ako mora, ali stalno proveravajući da li je promenljiva `doneCounter` dostigla očekivanu vrednost. A kad je bude dostigla, glavna nit štampa rezultat. 
 
 Ipak, rezultat koda gore je katastrofa:
 
@@ -1079,11 +1089,11 @@ Ipak, rezultat koda gore je katastrofa:
 
 Iako se ništa nije zaglavilo (u Go-u je sabiranje celobrojnih vrednosti očigledno atomska operacija koja se ne može se usred posla prekinuti), ovaj rezultat, kao prvo, uopšte nije tačan. Stvarno, kako to da smo na promenljivu `s` očigledno dodali svih 3 milijarde potrebnih brojeva, a ipak dobili netačan rezultat?
 
-Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i da zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit A kasnije upiše svoje novoizračunato `s` koje je sada već zastarelo, ona će poništiti doprinos niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
+Stvar je u tome što se naredba `s += i` koju izvršava funkcija `suma` sastoji od bar dve različite operacije: 1. `očitavanje starog s-a` 2. `upis novog (inkrementiranog) s-a`. Svaka od tih operacija jeste atomska, ali one zajedno u nizu to nisu: u prostoru *između njih* postoji opasnost da se ušunja neka druga nit/*thread* i da zajebe stvar. Svaki put kada se to desi (a u ovom slučaju desiće se mnogo puta, zato što je veliki broj sabiranja sabijen u jednu tačku prostora i vremena), sabiranje prosto "prezupči". Na primer, zamislite da nit A očita promenljivu `s` koju nit B samo što nije promenila. Za vreme dok nit A računa izraz `s + i`, nit B je već promenila `s`, tako da, kad nit A kasnije upiše svoje novoizračunato, ali sada već zastarelo `s`, ona će poništiti doprinos niti B. Na ovaj način, mnogi od sabiraka bivaju progutani, što je razlog da nam konačna suma nije tačna.
 
 Osim toga, u kodu gore ima jedan veeeeeliki bag. Sve što smo rekli za `s` važi i za `doneCounter`, tako da smo prosto imali sreće da `doneCounter` nije prezupčio na isti način kao `s`. Da se to desilo, uzaludno bi čekali da se ove 3 go-rutine završe. U stvari, one bi se jadne još i završile, samo mi to ne bismo znali. Zato nikada ne inkrementirajte brojeve na ovaj način. Koristite `doneCounter++`, što je u Go-u atomska operacija.
 
-Novo vreme izvršavanja koje smo dobili gore je isto tako katastrofa. Ovo je zato što sada niti (*thread*-ovi) čekaju čak na dva interna semafora kod atomskih operacija 1. i 2, što znači da se niti provlače kroz ovaj kod kao pile kroz vrzinu. 
+Novo vreme izvršavanja koje smo dobili gore je isto tako katastrofa. Ovo je zato što sada niti (*thread*-ovi) čekaju čak na dva interna semafora kod atomskih operacija 1. i 2, što znači da se niti provlače kroz ovaj kōd k'o pilići kroz vrzinu. 
 
 Korektnost rezultata možemo popraviti tako što ćemo "atomizirati" operacije 1. i 2, ali nemojte ni pokušati ovo izvršiti, toliko će biti sporo:
 ```go
@@ -1140,7 +1150,7 @@ I to je to. Jednostavno, čisto, bez gužve. Ovaj idiom je toliko sladak da nije
 
 ---
 
-Ipak, nemojte nikad na ovaj način čitati iz kanala, osim u situacijama kada ste sigurni da će vaša go-rutina da završi posao u prihvatljivom roku. Čitanje iz kanala je *blokirajuće*, što znači da će vaš program ovde 3x da stane, i da čeka sve dok se na kanalu ne pojavi neka vrednost. E sad: a šta ako se tamo nikada ne pojavi nikakva vrednost? Ili ako nam je vreme čekanja na tu vrednost neprihvatljivo? Takve slučajeve ćemo doživeti kao da se program zaglavio, zar ne?
+Ipak, nemojte nikad ovako čitati iz kanala, osim ako ste sigurni da će vaša go-rutina da završi posao u prihvatljivom roku. Čitanje iz kanala je *blokirajuće*, što znači da će vaš program ovde 3x da stane, i da čeka sve dok se na kanalu ne pojavi neka vrednost. E sad: a šta ako se tamo nikada ne pojavi nikakva vrednost? Ili ako nam je vreme čekanja na tu vrednost neprihvatljivo? Takve slučajeve ćemo doživeti kao da se program zaglavio, zar ne?
 
 Snabdene voki-tokijem ili ne, go-rutine, jednom lansirane, ponašaju se kao pušteni baloni nad kojima u opštem slučaju nemamo kontrolu. Iako je moguće uz nešto grčenja isprogramirati *nekakvu* kontrolu, ipak je najčistije pobrinuti se da se go-rutine kad-tad završe, a za komunikaciju sa njima koristiti kanale. Isto tako, uvek dajte svojim go-rutinama rok u kojima bi trebalo da završe svoj posao. Ovo se u Go-u lako implementira korišćenjem naredbe `select`, jedne prelepe jezičke konstrukcije motivisane upravo potrebama paralelnog programiranja.
 
@@ -1149,8 +1159,6 @@ Snabdene voki-tokijem ili ne, go-rutine, jednom lansirane, ponašaju se kao puš
 Da bi ilustrovali poentu, učinićemo našu funkciju `suma` namerno nestašnom, da bi je kasnije ukrotili naredbom `select`. Recimo da funkcija `suma` na početku sa verovatnoćom 0.25 odlučuje da li da spava jednu čitavu sekundu ili ne. Ovako simuliramo nepredvidljivost vremena izvršavanja. U realnom životu, ova nepredvidljivost može nastati zbog nekog upita nekoj preopterećenoj bazi podataka, ili zbog nekog pičvajza na mreži, nebitno:
 
 ```go
-    rand.Seed(time.Now().UTC().UnixNano())
-    ...
     suma := func(m, n int, c chan int) {
         if (rand.Intn(4) == 0) {
             time.Sleep(1 * time.Second)
@@ -1169,9 +1177,9 @@ Verovatnoća da će bar neka rutina ovde da spava je 55/64, što je dosta veliko
     4500000001500000000 1.297851977s
 ```
 
-Rezultat preko jedne sekunde je očekivan, jer je bar jedna od go-rutina donela odluku da spava čitavu jednu sekundu. E sad: zamislimo sada da našim go-rutinama želimo dati rok od samo jedne sekunde za čitav posao. A ako ne završe taj posao, želimo da glavni program liže svoje rane smatrajući da nema nikakav rezultat. Za ovaj scenario može poslužiti prelepa konstrukcija `select`. Ova konstrukcija je izuzetno razgovetna i to baš zato što je na neki način misaono rekurzivna: stvar se opet svodi - na čitanje sa kanala!
+Rezultat preko jedne sekunde je ovde očekivan, jer je bar jedna go-rutina donela odluku da dremne čitavu sekundu. E sad: zamislite sada da našim go-rutinama želimo dati rok od samo jedne sekunde za čitav posao. A ako ne završe taj posao, želimo da glavni program liže svoje rane smatrajući da nema nikakav rezultat. Za ovaj scenario može poslužiti prelepa konstrukcija `select`, konstrukcija koja je toliko razgovetna baš zato što je misaono rekurzivna. Jer, stvar se opet svodi - na čitanje sa kanala!
 
-Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati poseban kanal kroz koji će nam ona vratiti konačan rezultat. Primetimo da ova nova funkcija kreira go-rutine za sabiranje, kao i kanal za komunikaciju sa njima:
+Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati poseban kanal kroz koji će nam ona vratiti konačan rezultat. Sada se sve dešava u toj novoj funkciji: ona kreira one stare go-rutine za sabiranje, kao i kanal za komunikaciju sa njima:
 
 ```go
     wait := func (chRes chan int) {
@@ -1186,7 +1194,7 @@ Spakovaćemo sakupljanje podrezultata u posebnu funkciju kojoj ćemo dati poseba
     }
 ```
 
-Sada ćemo kreirati kanal koji ćemo predati go-rutini `wait`, a zatim u `select`-u čekati na konačni rezultat:
+Sada ćemo kreirati kanal preko kojeg će nam go-rutina `wait` vratiti konačan rezultat, kojeg ćemo zatim sačekati naredbom `select`:
 
 ```go
     c := make(chan int, 1)
@@ -1200,13 +1208,13 @@ Sada ćemo kreirati kanal koji ćemo predati go-rutini `wait`, a zatim u `select
     }
 ```
 
-Naredba `select` služi za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, do jaja za tajmere. Ona vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mi zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
+Naredba `select` služi za čekanje na jedan ili više zadatih kanala, pa šta prvo naiđe. I ova naredba je blokirajuća. Međutim, šta god da naiđe na nekom od kanala, program će odblokirati, t.j. izaći iz `select`-a i nastaviti sa radom. Ovde nam u pomoć priskače paket `time` koji nudi veoma zgodnu funkciju `After()`, do jaja za tajmere. Ona vraća kanal u koji će sigurno nešto da upiše nakon vremena koje smo mu zadali. Tako ako se nešto pojavi prvo na **tom** kanalu, smatraćemo da se desio neki pičvajz, te da konačan rezultat nemamo. U suprotnom, rezultat je tu, i sve što preostaje učiniti jeste odštampati ga.
 
 ---
 
-E sad: u slučaju da se zaista desi tajmout, kakva je sudbina one četiri go-rutine koje smo lansirali?
+E sad: u slučaju da se ovde zaista desi tajmout, kakva je sudbina one četiri go-rutine koje smo lansirali?
 
-Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi smo na njih u tom slučaju zaboravili. Zato je bitno pisati go-rutine tako da završavaju započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu da rade šta god da rade, ali ove tehnike nećemo ovde pokazati; ionako smo se previše raspisali. Zapamtite: ako propustite da ovo učinite, nakupiće vam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
+Sudeći po tome kako smo ih napisali, one će jednom sigurno završiti svoj posao, samo neće imati kome da predaju rezultat: mi tada više nećemo biti tu. Drugim rečima, mi smo na njih u tom slučaju zaboravili. Zato je bitno pisati go-rutine tako da završavaju započeti posao čak i onda kada na njih zaboravimo. Ponekad ih je potrebno malkice cimnuti za rukav, signalizirajući im da prekinu da rade šta god da rade, ali ove tehnike nećemo ovde pokazati; ionako smo se previše raspisali. Zapamtite: ako propustite da **nešto** učinite, nakupiće vam se đubre od nezavršenih go-rutina koje, osim što žderu memoriju, uz to troše i CPU.
 
 ___
 ___
@@ -1233,9 +1241,9 @@ type syncedMapStore struct {
 }
 ```
 
-Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Doduše, tu je `mapStore`, a sa njim već može da se barata.
+Bogami, baš mršavo. Kao prvo, ovaj muteks nam ovde ništa ne pomaže, jer nam on ne donosi ništa funkcionalno novo. Doduše, tu je `mapStore`, a sa tim već može da se barata.
 
-Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat, a onda **taj koverat** sačuvamo u `mapStore`. Kasnije kada naiđe `Fetch()`, mi prvo iscimamo mapu da nam preda koverat, a onda jednostavno vratimo rezultat.
+Budući da `mapStore` može da primi svašta nešto, `payload`-ove možemo da pakujemo u koverte na kojima pre toga naškrabamo vreme nastanka i rok trajanja. Svaki put kad klijent pozove `Store`, mi `payload` spakujemo u koverat, a onda **taj koverat** sačuvamo u `mapStore`. Kasnije, kad naiđe `Fetch()`, mi prvo iscimamo mapu da nam preda traženi koverat, pa vratimo rezultat.
 
 Koverat koji smo opisali izgleda ovako:
 ```go
